@@ -1,46 +1,130 @@
 """Model memory retrieval decision responses."""
 
+import math
 import numpy as np
-import theano.tensor as tt
-from psireact import lba
+import aesara
+import aesara.tensor as at
+import pymc as pm
 
 
-def pdf(t, i, n, A, b, v1, v2, s):
-    """Probability distribution function for 3afc tests."""
-    # probability that all accumulators are negative
-    all_neg = (
-        lba.normcdf(-v1 / s) * lba.normcdf(-v2 / s) * lba.normcdf(-v2 / s)
-    )
+def normpdf(x):
+    return (1 / pm.math.sqrt(2 * math.pi)) * pm.math.exp(-(x ** 2) / 2)
+
+
+def normcdf(x):
+    return (1 / 2) * (1 + pm.math.erf(x / pm.math.sqrt(2)))
+
+
+def tpdf(t, A, b, v, s):
+    """Probability distribution function over time."""
+    g = (b - A - t * v) / (t * s)
+    h = (b - t * v) / (t * s)
+    f = (-v * normcdf(g) + s * normpdf(g) + v * normcdf(h) - s * normpdf(h)) / A
+    return f
+
+
+def tcdf(t, A, b, v, s):
+    """Cumulative distribution function over time."""
+    e1 = ((b - A - t * v) / A) * normcdf((b - A - t * v) / (t * s))
+    e2 = ((b - t * v) / A) * normcdf((b - t * v) / (t * s))
+    e3 = ((t * s) / A) * normpdf((b - A - t * v) / (t * s))
+    e4 = ((t * s) / A) * normpdf((b - t * v) / (t * s))
+    F = 1 + e1 - e2 + e3 - e4
+    return F
+
+
+def pdf(response_data, s, τ, A, b, v1, v2):
+    """Calculate probability density function for 3AFC using Aesara."""
+    i = response_data[:, 0]
+    t = response_data[:, 1] - τ
 
     # PDF for each accumulator
-    p1 = lba.tpdf(t, A, b, v1, s)
-    p2 = lba.tpdf(t, A, b, v2, s)
+    p1 = tpdf(t, A, b, v1, s)
+    p2 = tpdf(t, A, b, v2, s)
 
     # probability of having not hit threshold by now
-    n1 = 1 - lba.tcdf(t, A, b, v1, s)
-    n2 = 1 - lba.tcdf(t, A, b, v2, s)
+    n1 = 1 - tcdf(t, A, b, v1, s)
+    n2 = 1 - tcdf(t, A, b, v2, s)
 
     # conditional probability of each accumulator hitting threshold now
     c1 = p1 * n2 * n2
     c2 = p2 * n1 * n2
-    c3 = p2 * n1 * n2
 
-    # calculate probability of this response and rt,
-    # conditional on a valid response
-    pdf = tt.switch(
-        tt.eq(i, 1), c1 / (1 - all_neg), (c2 + c3) / (1 - all_neg)
-    )
-    pdf_cond = tt.switch(tt.gt(t, 0), pdf, 0)
-    return pdf_cond
+    # calculate probability of this response and rt
+    p = at.switch(at.eq(i, 1), c1, 2 * c2)
+    return p
 
 
-def rvs(n, A, b, v1, v2, s, tau, size=1):
-    """Random generator for 3afc tests."""
+def function_pdf():
+    """Generate an Aesara function to evaluate the PDF."""
+    # time and response vary by trial
+    r = at.dmatrix('r')
 
-    # finish times of accumulators
-    rt, resp = lba.sample_response(A, b, [v1, v2, v2], s, tau, size)
+    # parameters are fixed over trial
+    s = at.dscalar('s')
+    τ = at.dscalar('τ')
+    A = at.dscalar('A')
+    b = at.dscalar('b')
+    v1 = at.dscalar('v1')
+    v2 = at.dscalar('v2')
 
-    # accumulator 1 indicates correct response
-    correct = np.zeros(size)
-    correct[resp == 0] = 1
-    return rt, correct
+    p = pdf(r, s, τ, A, b, v1, v2)
+    f = aesara.function([r, s, τ, A, b, v1, v2], p)
+    return f
+
+
+def logp(response_data, s, τ, A, b, v1, v2):
+    """Calculate log probability using Aesara."""
+    p = pdf(response_data, s, τ, A, b, v1, v2)
+    ll = pm.math.sum(pm.math.log(p))
+    return ll
+
+
+def drift_rates(v, s, nt, rng):
+    """Generate random drift rates."""
+    # sample drift rates with constraint that, on each trial,
+    # at least one accumulator must be positive
+    nv = len(v)
+    d = np.zeros((nt, nv))
+    valid = False
+    isvalid = np.zeros(nt, dtype=bool)
+    while not valid:
+        # generate random accumulator drift rates
+        c = np.zeros((nt, nv))
+        for i in range(nv):
+            c[:, i] = rng.normal(loc=v[i], scale=s, size=nt)
+        valid_c = c[np.any(c > 0, axis=1), :]
+
+        # replace invalid trials
+        n = np.count_nonzero(~isvalid)
+        m = valid_c.shape[0]
+        k = n if n <= m else m
+        replace_ind = np.where(~isvalid)[0]
+        d[replace_ind[:k], :] = valid_c[:k, :]
+
+        # check if all valid
+        isvalid = np.any(d > 0, axis=1)
+        valid = np.all(isvalid)
+    d[d <= 0] = np.nan
+    return d
+
+
+def random(s, τ, A, b, v1, v2, rng, size=None):
+    """Randomly sample correct and incorrect response times."""
+    if size is None:
+        size = (1, 2)
+
+    # sample start point and drift on each trial
+    k = rng.uniform(0, A, size=(size[0], 3))
+    d = drift_rates([v1, v2, v2], s, size[0], rng)
+    t = τ + ((b - k) / d)
+
+    # score responses (0 is correct, 1 or 2 is incorrect)
+    x = np.zeros((size[0], 2))
+    winner = np.nanargmin(t, axis=1)
+    x[winner == 0, 0] = 1
+    x[winner != 0, 0] = 0
+
+    # time first accumulator finished
+    x[:, 1] = np.nanmin(t, axis=1)
+    return x
