@@ -2,6 +2,7 @@
 
 import math
 import numpy as np
+import pandas as pd
 import aesara
 import aesara.tensor as at
 import pymc as pm
@@ -128,3 +129,10 @@ def random(s, τ, A, b, v1, v2, rng, size=None):
     # time first accumulator finished
     x[:, 1] = np.nanmin(t, axis=1)
     return x
+
+
+def response_dataframe(mat):
+    """Convert a response matrix to DataFrame format."""
+    data = pd.DataFrame({'Response': mat[:, 0], 'Response time': mat[:, 1]})
+    data['Response'] = data['Response'].map({0: 'Incorrect', 1: 'Correct'})
+    return data
