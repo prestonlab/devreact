@@ -89,15 +89,17 @@ def function_pdf_single():
     n = at.ivector('n')
 
     # parameters are fixed over trial
-    s = at.dscalar('s')
-    τ = at.dscalar('τ')
-    A = at.dscalar('A')
-    b = at.dscalar('b')
-    v1 = at.dscalar('v1')
-    v2 = at.dscalar('v2')
+    params = [
+        at.dscalar('s'),
+        at.dscalar('τ'),
+        at.dscalar('A'),
+        at.dscalar('b'),
+        at.dscalar('v1'),
+        at.dscalar('v2'),
+    ]
 
-    p = pdf_single(response, n, s, τ, A, b, v1, v2)
-    f = aesara.function([response, n, s, τ, A, b, v1, v2], p)
+    p = pdf_single(response, n, *params)
+    f = aesara.function([response, n, *params], p)
     return f
 
 
@@ -108,30 +110,32 @@ def function_pdf_dual():
     n = at.ivector('n')
 
     # parameters are fixed over trial
-    s = at.dscalar('s')
-    τ = at.dscalar('τ')
-    A = at.dscalar('A')
-    b = at.dscalar('b')
-    v1 = at.dscalar('v1')
-    v2 = at.dscalar('v2')
-    r = at.dscalar('r')
-    v3 = at.dscalar('v3')
+    params = [
+        at.dscalar('s'),
+        at.dscalar('τ'),
+        at.dscalar('A'),
+        at.dscalar('b'),
+        at.dscalar('v1'),
+        at.dscalar('v2'),
+        at.dscalar('r'),
+        at.dscalar('v3'),
+    ]
 
-    p = pdf_dual(response, n, s, τ, A, b, v1, v2, r, v3)
-    f = aesara.function([response, n, s, τ, A, b, v1, v2, r, v3], p)
+    p = pdf_dual(response, n, *params)
+    f = aesara.function([response, n, *params], p)
     return f
 
 
-def logp_single(response_data, n, s, τ, A, b, v1, v2):
+def logp_single(response_data, n, *params):
     """Calculate log probability using Aesara."""
-    p = pdf_single(response_data, n, s, τ, A, b, v1, v2)
+    p = pdf_single(response_data, n, *params)
     ll = pm.math.sum(pm.math.log(p))
     return ll
 
 
-def logp_dual(response_data, n, s, τ, A, b, v1, v2, r, v3):
+def logp_dual(response_data, n, *params):
     """Calculate log probability using Aesara."""
-    p = pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3)
+    p = pdf_dual(response_data, n, *params)
     ll = pm.math.sum(pm.math.log(p))
     return ll
 
