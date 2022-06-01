@@ -34,7 +34,7 @@ def tcdf(t, A, b, v, s):
     return F
 
 
-def pdf(response_data, s, τ, A, b, v1, v2):
+def pdf_single(response_data, n, s, τ, A, b, v1, v2):
     """Calculate probability density function for 3AFC using Aesara."""
     i = response_data[:, 0]
     t = response_data[:, 1] - τ
@@ -82,10 +82,11 @@ def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3):
     return p
 
 
-def function_pdf():
+def function_pdf_single():
     """Generate an Aesara function to evaluate the PDF."""
     # time and response vary by trial
-    r = at.dmatrix('r')
+    response = at.dmatrix('r')
+    n = at.ivector('n')
 
     # parameters are fixed over trial
     s = at.dscalar('s')
@@ -95,8 +96,8 @@ def function_pdf():
     v1 = at.dscalar('v1')
     v2 = at.dscalar('v2')
 
-    p = pdf(r, s, τ, A, b, v1, v2)
-    f = aesara.function([r, s, τ, A, b, v1, v2], p)
+    p = pdf_single(response, n, s, τ, A, b, v1, v2)
+    f = aesara.function([response, n, s, τ, A, b, v1, v2], p)
     return f
 
 
@@ -121,9 +122,9 @@ def function_pdf_dual():
     return f
 
 
-def logp(response_data, s, τ, A, b, v1, v2):
+def logp_single(response_data, n, s, τ, A, b, v1, v2):
     """Calculate log probability using Aesara."""
-    p = pdf(response_data, s, τ, A, b, v1, v2)
+    p = pdf_single(response_data, n, s, τ, A, b, v1, v2)
     ll = pm.math.sum(pm.math.log(p))
     return ll
 
@@ -164,7 +165,7 @@ def drift_rates(v, s, nt, rng):
     return d
 
 
-def random(s, τ, A, b, v1, v2, rng, size=None):
+def random_single(n, s, τ, A, b, v1, v2, rng, size=None):
     """Randomly sample correct and incorrect response times."""
     if size is None:
         size = (1, 2)
