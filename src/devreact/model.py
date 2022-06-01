@@ -56,6 +56,32 @@ def pdf(response_data, s, τ, A, b, v1, v2):
     return p
 
 
+def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3):
+    """PDF for a dual-process model."""
+    i = response_data[:, 0]
+    t = response_data[:, 1] - τ
+
+    # PDF for each accumulator
+    v2a = v2 * r ** (n - 1)
+    p1 = tpdf(t, A, b, v1, s)
+    p2 = tpdf(t, A, b, v2a, s)
+    p3 = tpdf(t, A, b, v3, s)
+
+    # probability of having not hit threshold by now
+    n1 = 1 - tcdf(t, A, b, v1, s)
+    n2 = 1 - tcdf(t, A, b, v2a, s)
+    n3 = 1 - tcdf(t, A, b, v3, s)
+
+    # conditional probability of each accumulator hitting threshold now
+    c1 = p1 * n2 * n3 * n3
+    c2 = p2 * n1 * n3 * n3
+    c3 = p3 * n1 * n2 * n3
+
+    # calculate probability of this response and rt
+    p = at.switch(at.eq(i, 1), c1 + c2, 2 * c3)
+    return p
+
+
 def function_pdf():
     """Generate an Aesara function to evaluate the PDF."""
     # time and response vary by trial
@@ -74,9 +100,37 @@ def function_pdf():
     return f
 
 
+def function_pdf_dual():
+    """Generate an Aesara function to evaluate the dual-model PDF."""
+    # time and response vary by trial
+    response = at.dmatrix('r')
+    n = at.ivector('n')
+
+    # parameters are fixed over trial
+    s = at.dscalar('s')
+    τ = at.dscalar('τ')
+    A = at.dscalar('A')
+    b = at.dscalar('b')
+    v1 = at.dscalar('v1')
+    v2 = at.dscalar('v2')
+    r = at.dscalar('r')
+    v3 = at.dscalar('v3')
+
+    p = pdf_dual(response, n, s, τ, A, b, v1, v2, r, v3)
+    f = aesara.function([response, n, s, τ, A, b, v1, v2, r, v3], p)
+    return f
+
+
 def logp(response_data, s, τ, A, b, v1, v2):
     """Calculate log probability using Aesara."""
     p = pdf(response_data, s, τ, A, b, v1, v2)
+    ll = pm.math.sum(pm.math.log(p))
+    return ll
+
+
+def logp_dual(response_data, n, s, τ, A, b, v1, v2, r, v3):
+    """Calculate log probability using Aesara."""
+    p = pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3)
     ll = pm.math.sum(pm.math.log(p))
     return ll
 
@@ -127,6 +181,23 @@ def random(s, τ, A, b, v1, v2, rng, size=None):
     x[winner != 0, 0] = 0
 
     # time first accumulator finished
+    x[:, 1] = np.nanmin(t, axis=1)
+    return x
+
+
+def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
+    """Randomly sample based on a dual-process model."""
+    if size is None:
+        size = (1, 2)
+
+    v2a = v2 * r ** (n - 1)
+    k = rng.uniform(0, A, size=(size[0], 4))
+    d = drift_rates([v1, v2a, v3, v3], s, size[0], rng)
+    t = τ + ((b - k) / d)
+    x = np.zeros((size[0], 2))
+    winner = np.nanargmin(t, axis=1)
+    x[winner <= 1, 0] = 1
+    x[winner >= 2, 0] = 0
     x[:, 1] = np.nanmin(t, axis=1)
     return x
 
