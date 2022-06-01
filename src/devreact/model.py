@@ -99,7 +99,7 @@ def function_pdf_single():
     ]
 
     p = pdf_single(response, n, *params)
-    f = aesara.function([response, n, *params], p)
+    f = aesara.function([response, n, *params], p, on_unused_input='ignore')
     return f
 
 
