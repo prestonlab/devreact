@@ -195,6 +195,10 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
     if size is None:
         size = (n.shape[0], 2)
 
+    τ = np.asarray(τ)[:, np.newaxis]
+    A = np.asarray(A)[:, np.newaxis]
+    b = np.asarray(b)[:, np.newaxis]
+
     v2a = v2 * r ** (n - 1)
     k = rng.uniform(0, A, size=(size[0], 4))
     d = drift_rates([v1, v2a, v3, v3], s, size[0], rng)
