@@ -202,8 +202,11 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
     return x
 
 
-def response_dataframe(mat):
+def response_dataframe(mat, trial_type=None):
     """Convert a response matrix to DataFrame format."""
     data = pd.DataFrame({'Response': mat[:, 0], 'Response time': mat[:, 1]})
     data['Response'] = data['Response'].map({0: 'Incorrect', 1: 'Correct'})
+    if trial_type is not None:
+        data['Trial type'] = trial_type
+        data['Trial type'] = data['Trial type'].map({1: 'Direct', 2: 'Indirect'})
     return data
