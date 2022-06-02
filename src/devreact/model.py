@@ -170,10 +170,26 @@ def drift_rates(v, s, nt, rng):
     return d
 
 
+def broadcast2d(x):
+    """Broadcast a variable to a matrix."""
+    x = np.asarray(x)
+    if x.ndim == 0:
+        x.shape = (1, 1)
+    elif x.ndim == 1:
+        x = x[:, np.newaxis]
+    elif x.ndim > 2:
+        raise ValueError('x must have 2 or fewer dimensions')
+    return x
+
+
 def random_single(n, s, τ, A, b, v1, v2, rng, size=None):
     """Randomly sample correct and incorrect response times."""
     if size is None:
         size = (n.shape[0], 2)
+
+    τ = broadcast2d(τ)
+    A = broadcast2d(A)
+    b = broadcast2d(b)
 
     # sample start point and drift on each trial
     k = rng.uniform(0, A, size=(size[0], 3))
@@ -196,9 +212,9 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
     if size is None:
         size = (n.shape[0], 2)
 
-    τ = np.asarray(τ)[:, np.newaxis]
-    A = np.asarray(A)[:, np.newaxis]
-    b = np.asarray(b)[:, np.newaxis]
+    τ = broadcast2d(τ)
+    A = broadcast2d(A)
+    b = broadcast2d(b)
 
     v2a = v2 * r ** (n - 1)
     v3a = v3 * r ** (n - 1)
