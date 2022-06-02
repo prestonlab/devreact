@@ -172,7 +172,7 @@ def drift_rates(v, s, nt, rng):
 def random_single(n, s, τ, A, b, v1, v2, rng, size=None):
     """Randomly sample correct and incorrect response times."""
     if size is None:
-        size = (1, 2)
+        size = (n.shape[0], 2)
 
     # sample start point and drift on each trial
     k = rng.uniform(0, A, size=(size[0], 3))
