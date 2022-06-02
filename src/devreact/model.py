@@ -63,14 +63,15 @@ def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3):
 
     # PDF for each accumulator
     v2a = v2 * r ** (n - 1)
+    v3a = v3 * r ** (n - 1)
     p1 = tpdf(t, A, b, v1, s)
     p2 = tpdf(t, A, b, v2a, s)
-    p3 = tpdf(t, A, b, v3, s)
+    p3 = tpdf(t, A, b, v3a, s)
 
     # probability of having not hit threshold by now
     n1 = 1 - tcdf(t, A, b, v1, s)
     n2 = 1 - tcdf(t, A, b, v2a, s)
-    n3 = 1 - tcdf(t, A, b, v3, s)
+    n3 = 1 - tcdf(t, A, b, v3a, s)
 
     # conditional probability of each accumulator hitting threshold now
     c1 = p1 * n2 * n3 * n3
@@ -200,8 +201,9 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
     b = np.asarray(b)[:, np.newaxis]
 
     v2a = v2 * r ** (n - 1)
+    v3a = v3 * r ** (n - 1)
     k = rng.uniform(0, A, size=(size[0], 4))
-    d = drift_rates([v1, v2a, v3, v3], s, size[0], rng)
+    d = drift_rates([v1, v2a, v3a, v3a], s, size[0], rng)
     t = τ + ((b - k) / d)
     x = np.zeros((size[0], 2))
     winner = np.nanargmin(t, axis=1)
