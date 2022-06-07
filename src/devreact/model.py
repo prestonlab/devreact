@@ -8,6 +8,17 @@ import aesara.tensor as at
 import pymc as pm
 
 
+def interval_forward(x, a, b):
+    """Transform a bounded variable to an unbounded scale."""
+    return np.log(x - a) - np.log(b - x)
+
+
+def interval_reverse(x, a, b):
+    """Transform an unbounded variable back to a bounded scale."""
+    s = 1 / (1 + np.exp(-x))
+    return s * b + (1 - s) * a
+
+
 def normpdf(x):
     return (1 / pm.math.sqrt(2 * math.pi)) * pm.math.exp(-(x ** 2) / 2)
 
