@@ -141,14 +141,14 @@ def function_pdf_dual():
 def logp_single(response_data, n, *params):
     """Calculate log probability using Aesara."""
     p = pdf_single(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(p))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
     return ll
 
 
 def logp_dual(response_data, n, *params):
     """Calculate log probability using Aesara."""
     p = pdf_dual(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(p))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
     return ll
 
 
