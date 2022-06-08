@@ -2,8 +2,10 @@
 
 from pkg_resources import resource_filename
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from devreact import model
 
 
 def set_style(style_path=None):
@@ -56,3 +58,43 @@ def plot_predictive(predictive, group='posterior', max_time=None, n_sample=50):
     ax[0, 1].set(xlim=[0, max_time])
     ax[1, 0].set(xlabel='Response time', ylabel='Indirect density')
     ax[1, 1].set(xlabel='Response time')
+
+
+def plot_predictive_acc(predictive, group='posterior'):
+    """Plot predictive accuracy by subject."""
+    if group == 'prior':
+        pps = predictive.prior_predictive
+    elif group == 'posterior':
+        pps = predictive.posterior_predictive
+    else:
+        raise ValueError(f'Invalid group: {group}')
+    pps = model.set_trial_coords(predictive.constant_data, pps)
+    obs = model.set_trial_coords(predictive.constant_data, predictive.observed_data)
+    p = (
+        pps.sel(component='response')
+        .mean(['chain', 'draw'])
+        .to_dataframe()
+        .groupby(['subject', 'trial_type'])['response']
+        .mean()
+    )
+    o = (
+        obs.sel(component='response')
+        .to_dataframe()
+        .groupby(['subject', 'trial_type'])['response']
+        .mean()
+    )
+    accuracy = pd.concat([o, p], axis=1, keys=['Observed', 'Predictive']).reset_index()
+    accuracy['trial_type'] = accuracy['trial_type'].str.capitalize()
+    ticks = np.linspace(0, 1, 5)
+    g = sns.relplot(
+        data=accuracy,
+        x='Predictive',
+        y='Observed',
+        col='trial_type',
+        clip_on=False,
+        height=3.5,
+        aspect=.8,
+    )
+    g.set(xlim=[0, 1], ylim=[0, 1], xticks=ticks, yticks=ticks)
+    g.set_titles(template='{col_name}')
+    return g
