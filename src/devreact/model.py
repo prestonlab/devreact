@@ -248,3 +248,14 @@ def response_dataframe(mat, trial_type=None):
         data['Trial type'] = trial_type
         data['Trial type'] = data['Trial type'].map({1: 'Direct', 2: 'Indirect'})
     return data
+
+
+def set_trial_coords(constant_data, data):
+    """Set coordinates based on trial labels."""
+    c = constant_data
+    trial_type = c.coords['trial_type'].data[c.trial_type_index.data]
+    subject = c.coords['subject'].data[c.subject_index.data]
+    data = data.assign_coords(
+        subject=('trial', subject), trial_type=('trial', trial_type)
+    )
+    return data
