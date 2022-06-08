@@ -259,3 +259,35 @@ def set_trial_coords(constant_data, data):
         subject=('trial', subject), trial_type=('trial', trial_type)
     )
     return data
+
+
+def observed_dataframe(data):
+    """Convert observed data to DataFrame format."""
+    observed_data = set_trial_coords(data.constant_data, data.observed_data)
+    df = pd.pivot(
+        observed_data.response.to_dataframe().reset_index(),
+        index=['trial', 'subject', 'trial_type'],
+        columns='component',
+        values='response',
+    )
+    df['response_label'] = df['response'].map({0: 'Incorrect', 1: 'Correct'})
+    return df
+
+
+def predictive_dataframe(data, group='posterior'):
+    """Convert predictive data to DataFrame format."""
+    if group == 'prior':
+        pps = data.prior_predictive
+    elif group == 'posterior':
+        pps = data.posterior_predictive
+    else:
+        raise ValueError(f'Invalid group: {group}')
+    pps = set_trial_coords(data.constant_data, pps)
+    df = pd.pivot(
+        pps.response.to_dataframe().reset_index(),
+        index=['chain', 'draw', 'trial', 'subject', 'trial_type'],
+        columns='component',
+        values='response',
+    )
+    df['response_label'] = df['response'].map({0: 'Incorrect', 1: 'Correct'})
+    return df
