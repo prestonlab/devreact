@@ -98,3 +98,33 @@ def plot_predictive_acc(predictive, group='posterior'):
     g.set(xlim=[0, 1], ylim=[0, 1], xticks=ticks, yticks=ticks)
     g.set_titles(template='{col_name}')
     return g
+
+
+def plot_predictive_rt(predictive, group='posterior', max_time=None):
+    """Plot predictive response time by subject."""
+    obs = model.observed_dataframe(predictive)
+    ppc = model.predictive_dataframe(predictive, group)
+
+    groups = ['subject', 'trial_type', 'response_label']
+    rt = pd.concat(
+        [
+            obs.groupby(groups)['response_time'].mean(),
+            ppc.groupby(groups)['response_time'].mean(),
+        ], axis=1, keys=['Observed', 'Predictive']
+    ).reset_index()
+
+    rt['trial_type'] = rt['trial_type'].str.capitalize()
+    g = sns.relplot(
+        data=rt,
+        x='Predictive',
+        y='Observed',
+        row='trial_type',
+        col='response_label',
+        clip_on=False,
+        height=3.5,
+        aspect=.8,
+    )
+    g.set_titles(template='{row_name} {col_name}')
+    if max_time is not None:
+        g.set(xlim=[0, max_time], ylim=[0, max_time])
+    return g
