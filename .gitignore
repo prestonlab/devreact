@@ -136,3 +136,4 @@ dmypy.json
 
 # development notebooks
 jupyter/dev/
+jupyter/dev_pymc4/
