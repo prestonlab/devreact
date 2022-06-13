@@ -198,9 +198,9 @@ def random_single(n, s, τ, A, b, v1, v2, rng, size=None):
     if size is None:
         size = (n.shape[0], 2)
 
-    τ = broadcast2d(τ)
-    A = broadcast2d(A)
-    b = broadcast2d(b)
+    τ = np.clip(broadcast2d(τ), 10e-10, 10e10)
+    A = np.clip(broadcast2d(A), 10e-10, 10e10)
+    b = np.clip(broadcast2d(b), 10e-10, 10e10)
 
     # sample start point and drift on each trial
     k = rng.uniform(0, A, size=(size[0], 3))
@@ -223,9 +223,9 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
     if size is None:
         size = (n.shape[0], 2)
 
-    τ = broadcast2d(τ)
-    A = broadcast2d(A)
-    b = broadcast2d(b)
+    τ = np.clip(broadcast2d(τ), 10e-10, 10e10)
+    A = np.clip(broadcast2d(A), 10e-10, 10e10)
+    b = np.clip(broadcast2d(b), 10e-10, 10e10)
 
     v2a = v2 * r ** (n - 1)
     v3a = v3 * r ** (n - 1)
