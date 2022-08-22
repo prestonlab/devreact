@@ -1,3 +1,42 @@
+[project]
+name = "devreact"
+description = "DevReact: Modeling of developmental changes in memory-based decision making"
+version = "0.1.0"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Neal W Morton", email = "mortonne@gmail.com"},
+]
+keywords = ["psychology", "response time", "decision making", "memory"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: OS Independent"
+]
+urls = {project = "https://github.com/prestonlab/devreact"}
+
+[tool.poetry]
+name = "devreact"
+version = "0.1.0"
+description = "DevReact: Modeling of developmental changes in memory-based decision making"
+authors = ["Neal Morton <mortonne@gmail.com>"]
+license = "GPL-3.0-or-later"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.11"
+numpy = "^1.23.2"
+scipy = "^1.9.0"
+pandas = "^1.4.3"
+seaborn = "^0.11.2"
+matplotlib = "^3.5.3"
+watermark = "^2.3.1"
+jupyterlab = "^3.4.5"
+pymc = "^4.1.5"
+arviz = "^0.12.1"
+
+[tool.poetry.dev-dependencies]
+black = "^22.6.0"
+
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
