@@ -1,5 +1,6 @@
 """Plotting manuscript figures."""
 
+import warnings
 from pkg_resources import resource_filename
 import numpy as np
 import pandas as pd
@@ -31,7 +32,14 @@ def plot_predictive(predictive, group='posterior', max_time=None, n_sample=50):
     n = predictive.constant_data.n.values
 
     fig, ax = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(6, 6))
-    pps_kwargs = {'linewidth': 0.5, 'alpha': 0.5, 'color': 'C0', 'warn_singular': False}
+    hist_kwargs = {
+        'element': 'poly',
+        'fill': False,
+        'binrange': (0, max_time),
+        'binwidth': 0.25,
+        'stat': 'density',
+    }
+    pps_kwargs = {'linewidth': 0.5, 'alpha': 0.5, 'color': 'C0'}
     obs_kwargs = {'linewidth': 1, 'color': 'k'}
 
     # plot a subset of the predictive samples
@@ -42,16 +50,28 @@ def plot_predictive(predictive, group='posterior', max_time=None, n_sample=50):
         times = sample.sel(component='response_time').response.values
         for i, N in enumerate([1, 2]):
             for j, R in enumerate([1, 0]):
-                sns.kdeplot(
-                    times[(n == N) & (responses == R)], ax=ax[i, j], **pps_kwargs
-                )
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    sns.histplot(
+                        times[(n == N) & (responses == R)],
+                        ax=ax[i, j],
+                        **hist_kwargs,
+                        **pps_kwargs,
+                    )
 
     # plot the observed data
     responses = predictive.observed_data.sel(component='response').response.values
     times = predictive.observed_data.sel(component='response_time').response.values
     for i, N in enumerate([1, 2]):
         for j, R in enumerate([1, 0]):
-            sns.kdeplot(times[(n == N) & (responses == R)], ax=ax[i, j], **obs_kwargs)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                sns.histplot(
+                    times[(n == N) & (responses == R)],
+                    ax=ax[i, j],
+                    **hist_kwargs,
+                    **obs_kwargs,
+                )
     ax[0, 0].set(title='Correct', xlabel='Response time')
     ax[0, 1].set(title='Incorrect', xlabel='Response time')
     ax[0, 0].set(xlim=[0, max_time], ylabel='Direct density')
