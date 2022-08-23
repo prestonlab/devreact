@@ -105,11 +105,17 @@ def plot_predictive_acc(predictive, group='posterior'):
     )
     accuracy = pd.concat([o, p], axis=1, keys=['Observed', 'Predictive']).reset_index()
     accuracy['trial_type'] = accuracy['trial_type'].str.capitalize()
+    accuracy['age'] = np.repeat(
+        predictive.constant_data.age.values, accuracy['trial_type'].nunique()
+    )
     ticks = np.linspace(0, 1, 5)
     g = sns.relplot(
         data=accuracy,
         x='Predictive',
         y='Observed',
+        hue='age',
+        palette='crest',
+        alpha=0.6,
         col='trial_type',
         clip_on=False,
         height=3.5,
@@ -134,10 +140,17 @@ def plot_predictive_rt(predictive, group='posterior', max_time=None):
     ).reset_index()
 
     rt['trial_type'] = rt['trial_type'].str.capitalize()
+    rt['age'] = np.repeat(
+        predictive.constant_data.age.values,
+        rt['trial_type'].nunique() * rt['response_label'].nunique(),
+    )
     g = sns.relplot(
         data=rt,
         x='Predictive',
         y='Observed',
+        hue='age',
+        palette='crest',
+        alpha=0.6,
         row='trial_type',
         col='response_label',
         clip_on=False,
