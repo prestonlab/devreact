@@ -4,13 +4,13 @@ import numpy as np
 import pandas as pd
 
 
-def read_remind(data_file):
+def read_remind(data_file, signals=None):
     """Read raw Remind data."""
-    raw = pd.read_csv(data_file)
+    raw = pd.read_table(data_file)
 
     # label trials with no response
-    response = raw['accuracy'].copy()
-    response[raw['response_time'].isna()] = np.nan
+    response = raw['acc'].copy()
+    response[raw['rt'].isna()] = np.nan
 
     # define age bins
     age_bins = [6, 8, 10, 12, 35]
@@ -24,21 +24,24 @@ def read_remind(data_file):
     response_map = {0: 'incorrect', 1: 'correct'}
     data = pd.DataFrame(
         {
-            'subject': raw['subject'],
+            'subject': raw['id'],
             'age': raw['age'],
             'age_centered': raw['age'] - raw['age'].mean(),
             'age_bin': age_bin,
             'age_label': age_bin.cat.set_categories(age_labels, rename=True),
-            'run': raw['trial_type'].map(run_map),
+            'run': raw['run'].map(run_map),
             'trial': raw['trial'],
-            'triad': raw['tiad'],
-            'trial_type': raw['trial_type'].map(trial_type_map),
-            'category': raw['trial_type'].map(category_map),
+            'triad': raw['triad'],
+            'trial_type': raw['test_type'].map(trial_type_map),
+            'category': raw['test_type'].map(category_map),
             'response': response,
             'response_label': response.map(response_map),
-            'response_time': raw['response_time'] / 1000,
+            'response_time': raw['rt'] / 1000,
         }
     )
+    if signals is not None:
+        for signal in signals:
+            data[signal] = raw[signal]
     return data
 
 
