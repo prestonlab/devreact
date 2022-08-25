@@ -152,6 +152,39 @@ def logp_dual(response_data, n, *params):
     return ll
 
 
+def age_var(name, age, coef_mu, coef_sigma, beta, log=False):
+    """Generate a parameter that varies with age."""
+    # coefficients to determine mean over age
+    age_b = []
+    for i, (mu, sigma) in enumerate(zip(coef_mu, coef_sigma)):
+        age_b.append(pm.Normal(f'{name}_b{i}', mu=mu, sigma=sigma))
+
+    # determine mean as a function of age
+    if len(age_b) == 2:
+        subject_mu = pm.Deterministic(
+            f'{name}_μ', age_b[0] + age_b[1] * age, dims=['subject']
+        )
+    elif len(age_b) == 3:
+        subject_mu = pm.Deterministic(
+            f'{name}_μ',
+            age_b[0] + age_b[1] * age + age_b[2] * age ** 2,
+            dims=['subject'],
+        )
+    else:
+        raise ValueError('Unsupported number of age coefficients.')
+
+    # determine subject parameters
+    sigma = pm.HalfCauchy(f'{name}_σ', beta=beta)
+    centered = pm.Normal(f'{name}_c', mu=0, sigma=1, dims=['subject'])
+    if log:
+        param = pm.Deterministic(
+            name, pm.math.exp(subject_mu + sigma * centered), dims=['subject']
+        )
+    else:
+        param = pm.Deterministic(name, subject_mu + sigma * centered, dims=['subject'])
+    return param
+
+
 def drift_rates(v, s, nt, rng):
     """Generate random drift rates."""
     # sample drift rates with constraint that, on each trial,
