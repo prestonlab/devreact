@@ -67,6 +67,30 @@ def pdf_single(response_data, n, s, τ, A, b, v1, v2):
     return p
 
 
+def pdf_separate(response_data, n, s, τ, A, b, v1, v2, v3, v4):
+    """PDF for a separate-process model."""
+    i = response_data[:, 0]
+    t = response_data[:, 1] - τ
+
+    # PDF for each accumulator
+    v1a = at.switch(at.eq(n, 1), v1, v2)
+    v2a = at.switch(at.eq(n, 1), v3, v4)
+    p1 = tpdf(t, A, b, v1a, s)
+    p2 = tpdf(t, A, b, v2a, s)
+
+    # probability of having not hit threshold by now
+    n1 = 1 - tcdf(t, A, b, v1a, s)
+    n2 = 1 - tcdf(t, A, b, v2a, s)
+
+    # conditional probability of each accumulator hitting threshold now
+    c1 = p1 * n2 * n2
+    c2 = p2 * n1 * n2
+
+    # calculate probability of this response and rt
+    p = at.switch(at.eq(i, 1), c1, 2 * c2)
+    return p
+
+
 def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3):
     """PDF for a dual-process model."""
     i = response_data[:, 0]
@@ -115,6 +139,29 @@ def function_pdf_single():
     return f
 
 
+def function_pdf_separate():
+    """Generate an Aesara function to evaluate the separate-model PDF."""
+    # time and response vary by trial
+    response = at.dmatrix('r')
+    n = at.ivector('n')
+
+    # parameters are fixed over trial
+    params = [
+        at.dscalar('s'),
+        at.dscalar('τ'),
+        at.dscalar('A'),
+        at.dscalar('b'),
+        at.dscalar('v1'),
+        at.dscalar('v2'),
+        at.dscalar('v3'),
+        at.dscalar('v4'),
+    ]
+
+    p = pdf_separate(response, n, *params)
+    f = aesara.function([response, n, *params], p)
+    return f
+
+
 def function_pdf_dual():
     """Generate an Aesara function to evaluate the dual-model PDF."""
     # time and response vary by trial
@@ -141,6 +188,13 @@ def function_pdf_dual():
 def logp_single(response_data, n, *params):
     """Calculate log probability using Aesara."""
     p = pdf_single(response_data, n, *params)
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
+    return ll
+
+
+def logp_separate(response_data, n, *params):
+    """Calculate log probability using Aesara."""
+    p = pdf_separate(response_data, n, *params)
     ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
     return ll
 
@@ -247,6 +301,28 @@ def random_single(n, s, τ, A, b, v1, v2, rng, size=None):
     x[winner != 0, 0] = 0
 
     # time first accumulator finished
+    x[:, 1] = np.nanmin(t, axis=1)
+    return x
+
+
+def random_separate(n, s, τ, A, b, v1, v2, v3, v4, rng, size=None):
+    """Randomly sample based on a separate-process model."""
+    if size is None:
+        size = (n.shape[0], 2)
+
+    τ = np.clip(broadcast2d(τ), 10e-10, 10e10)
+    A = np.clip(broadcast2d(A), 10e-10, 10e10)
+    b = np.clip(broadcast2d(b), 10e-10, 10e10)
+
+    v1a = np.where(n == 1, v1, v2)
+    v2a = np.where(n == 1, v3, v4)
+    k = rng.uniform(0, A, size=(size[0], 3))
+    d = drift_rates([v1a, v2a, v2a], s, size[0], rng)
+    t = τ + ((b - k) / d)
+    x = np.zeros((size[0], 2))
+    winner = np.nanargmin(t, axis=1)
+    x[winner == 0, 0] = 1
+    x[winner != 0, 0] = 0
     x[:, 1] = np.nanmin(t, axis=1)
     return x
 
