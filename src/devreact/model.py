@@ -91,14 +91,14 @@ def pdf_separate(response_data, n, s, τ, A, b, v1, v2, v3, v4):
     return p
 
 
-def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3):
+def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3, v4):
     """PDF for a dual-process model."""
     i = response_data[:, 0]
     t = response_data[:, 1] - τ
 
     # PDF for each accumulator
     v2a = v2 * r ** (n - 1)
-    v3a = v3 * r ** (n - 1)
+    v3a = at.switch(at.eq(n, 1), v3, v4)
     p1 = tpdf(t, A, b, v1, s)
     p2 = tpdf(t, A, b, v2a, s)
     p3 = tpdf(t, A, b, v3a, s)
@@ -178,6 +178,7 @@ def function_pdf_dual():
         at.dscalar('v2'),
         at.dscalar('r'),
         at.dscalar('v3'),
+        at.dscalar('v4'),
     ]
 
     p = pdf_dual(response, n, *params)
@@ -327,7 +328,7 @@ def random_separate(n, s, τ, A, b, v1, v2, v3, v4, rng, size=None):
     return x
 
 
-def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
+def random_dual(n, s, τ, A, b, v1, v2, r, v3, v4, rng, size=None):
     """Randomly sample based on a dual-process model."""
     if size is None:
         size = (n.shape[0], 2)
@@ -337,7 +338,7 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, rng, size=None):
     b = np.clip(broadcast2d(b), 10e-10, 10e10)
 
     v2a = v2 * r ** (n - 1)
-    v3a = v3 * r ** (n - 1)
+    v3a = np.where(n == 1, v3, v4)
     k = rng.uniform(0, A, size=(size[0], 4))
     d = drift_rates([v1, v2a, v3a, v3a], s, size[0], rng)
     t = τ + ((b - k) / d)
