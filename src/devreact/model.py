@@ -360,6 +360,24 @@ def response_dataframe(mat, trial_type=None):
     return data
 
 
+def get_data_coords(data):
+    """Get data coordinates for modeling."""
+    subject, subject_index = np.unique(data['subject'].to_numpy(), return_inverse=True)
+
+    trial_type = ['direct', 'indirect']
+    trial_type_index = data['trial_type'].map({'XY': 0, 'BC': 0, 'AC': 1}).to_numpy()
+
+    trial = np.arange(data.shape[0])
+
+    coords = {
+        'component': ['response', 'response_time'],
+        'subject': subject,
+        'trial_type': trial_type,
+        'trial': trial,
+    }
+    return coords, subject_index, trial_type_index
+
+
 def set_trial_coords(constant_data, data):
     """Set coordinates based on trial labels."""
     c = constant_data
