@@ -16,7 +16,14 @@ def set_style(style_path=None):
     plt.style.use(style_path)
 
 
-def plot_predictive(predictive, group='posterior', max_time=None, n_sample=50):
+def plot_predictive(
+    predictive,
+    group='posterior',
+    row='trial_type',
+    col='accuracy',
+    max_time=None,
+    n_sample=50,
+):
     """Plot prior or posterior predictive responses."""
     # get the relevant samples
     if group == 'prior':
@@ -28,10 +35,30 @@ def plot_predictive(predictive, group='posterior', max_time=None, n_sample=50):
     samples = pps.stack({'sample': ['chain', 'draw']})
     m = samples.dims['sample']
 
-    # trial type
-    n = predictive.constant_data.n.values
+    factors = {'row': row, 'col': col}
+    names = {}
+    values = {}
+    labels = {}
+    for position, factor in factors.items():
+        if factor == 'trial_type':
+            n = np.array(['direct', 'inference'])
+            v = n[predictive.constant_data.trial_type_index.values]
+        elif factor == 'accuracy':
+            n = np.array(['correct', 'incorrect'])
+            v = n[1 - predictive.constant_data.x.values[:, 0].astype(int)]
+        elif factor == 'age':
+            n = np.array(['Age 7-8', 'Age 9-10', 'Age 11-12', 'Age 18-21'])
+            sind = predictive.constant_data.subject_index.values
+            v = n[predictive.constant_data.age_bin_index.values[sind]]
+        else:
+            raise ValueError(f'Invalid factor: {factor}.')
+        names[position] = n
+        values[position] = v
+        labels[position] = [s.capitalize() for s in n]
 
-    fig, ax = plt.subplots(2, 2, sharex=True, sharey=True, figsize=(6, 6))
+    nr = len(np.unique(values['row']))
+    nc = len(np.unique(values['col']))
+    fig, ax = plt.subplots(nr, nc, sharex=True, sharey=True, figsize=(3 * nc, 3 * nr))
     hist_kwargs = {
         'element': 'poly',
         'fill': False,
@@ -46,38 +73,28 @@ def plot_predictive(predictive, group='posterior', max_time=None, n_sample=50):
     ind = np.random.choice(m, n_sample)
     for s in range(n_sample):
         sample = samples.isel(sample=ind[s])
-        responses = sample.sel(component='response').response.values
         times = sample.sel(component='response_time').response.values
-        for i, N in enumerate([1, 2]):
-            for j, R in enumerate([1, 0]):
+        for i, R in enumerate(names['row']):
+            for j, C in enumerate(names['col']):
+                match = (values['row'] == R) & (values['col'] == C)
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    sns.histplot(
-                        times[(n == N) & (responses == R)],
-                        ax=ax[i, j],
-                        **hist_kwargs,
-                        **pps_kwargs,
-                    )
+                    sns.histplot(times[match], ax=ax[i, j], **hist_kwargs, **pps_kwargs)
 
     # plot the observed data
-    responses = predictive.observed_data.sel(component='response').response.values
     times = predictive.observed_data.sel(component='response_time').response.values
-    for i, N in enumerate([1, 2]):
-        for j, R in enumerate([1, 0]):
+    for i, R in enumerate(names['row']):
+        for j, C in enumerate(names['col']):
+            ind = (values['row'] == R) & (values['col'] == C)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                sns.histplot(
-                    times[(n == N) & (responses == R)],
-                    ax=ax[i, j],
-                    **hist_kwargs,
-                    **obs_kwargs,
-                )
-    ax[0, 0].set(title='Correct', xlabel='Response time')
-    ax[0, 1].set(title='Incorrect', xlabel='Response time')
-    ax[0, 0].set(xlim=[0, max_time], ylabel='Direct density')
-    ax[0, 1].set(xlim=[0, max_time])
-    ax[1, 0].set(xlabel='Response time', ylabel='Indirect density')
-    ax[1, 1].set(xlabel='Response time')
+                sns.histplot(times[ind], ax=ax[i, j], **hist_kwargs, **obs_kwargs)
+
+    for c in range(nc):
+        ax[0, c].set(title=labels['col'][c], xlim=[0, max_time])
+        ax[nr - 1, c].set(xlabel='Response time')
+    for r in range(nr):
+        ax[r, 0].set(ylabel=f'{labels["row"][r]} density')
     return fig, ax
 
 
