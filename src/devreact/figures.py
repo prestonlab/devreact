@@ -78,6 +78,7 @@ def plot_predictive(predictive, group='posterior', max_time=None, n_sample=50):
     ax[0, 1].set(xlim=[0, max_time])
     ax[1, 0].set(xlabel='Response time', ylabel='Indirect density')
     ax[1, 1].set(xlabel='Response time')
+    return fig, ax
 
 
 def plot_predictive_acc(predictive, group='posterior'):
