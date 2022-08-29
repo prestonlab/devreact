@@ -16,6 +16,23 @@ def set_style(style_path=None):
     plt.style.use(style_path)
 
 
+def plot_age_params(trace, var_names):
+    """Plot parameters that vary with age."""
+    params = trace.posterior.mean(['chain', 'draw'])[var_names].to_dataframe()
+    params['age'] = trace.constant_data.age.values
+    res = pd.melt(
+        params.reset_index(),
+        id_vars=['subject', 'age'],
+        value_vars=var_names,
+        value_name='Value',
+        var_name='Parameter',
+    )
+    g = sns.relplot(data=res, x='age', y='Value', col='Parameter')
+    g.set(xlabel='Age (years)')
+    g.set_titles(template='{col_name}')
+    return g
+
+
 def plot_predictive(
     predictive,
     group='posterior',
