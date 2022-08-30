@@ -38,6 +38,7 @@ def plot_predictive(
     group='posterior',
     row='trial_type',
     col='accuracy',
+    trial_type=None,
     max_time=None,
     n_sample=50,
 ):
@@ -87,6 +88,8 @@ def plot_predictive(
     obs_kwargs = {'linewidth': 1, 'color': 'k'}
 
     # plot a subset of the predictive samples
+    trial_types = np.array(['direct', 'inference'])
+    tt = trial_types[predictive.constant_data.trial_type_index.values]
     ind = np.random.choice(m, n_sample)
     for s in range(n_sample):
         sample = samples.isel(sample=ind[s])
@@ -94,6 +97,8 @@ def plot_predictive(
         for i, R in enumerate(names['row']):
             for j, C in enumerate(names['col']):
                 match = (values['row'] == R) & (values['col'] == C)
+                if trial_type is not None:
+                    match &= tt == trial_type
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     sns.histplot(times[match], ax=ax[i, j], **hist_kwargs, **pps_kwargs)
@@ -102,10 +107,12 @@ def plot_predictive(
     times = predictive.observed_data.sel(component='response_time').response.values
     for i, R in enumerate(names['row']):
         for j, C in enumerate(names['col']):
-            ind = (values['row'] == R) & (values['col'] == C)
+            match = (values['row'] == R) & (values['col'] == C)
+            if trial_type is not None:
+                match &= tt == trial_type
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                sns.histplot(times[ind], ax=ax[i, j], **hist_kwargs, **obs_kwargs)
+                sns.histplot(times[match], ax=ax[i, j], **hist_kwargs, **obs_kwargs)
 
     for c in range(nc):
         ax[0, c].set(title=labels['col'][c], xlim=[0, max_time])
