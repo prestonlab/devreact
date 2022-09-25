@@ -52,7 +52,7 @@ def plot_signal_coef(trace, coefs, param_name, signal_names):
         if i > 0:
             ax[i].set_yticklabels('')
         else:
-            ax[i].set_yticklabels(signal_names, fontsize='large')
+            ax[i].set_yticklabels(signal_names[::-1], fontsize='large')
         ax[i].set_xlabel(coef)
         ax[i].set_title('')
         abs_max = np.max(np.abs(ax[i].get_xlim()))
