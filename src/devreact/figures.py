@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import arviz as az
 from devreact import model
 
 
@@ -31,6 +32,24 @@ def plot_age_params(trace, var_names):
     g.set(xlabel='Age (years)')
     g.set_titles(template='{col_name}')
     return g
+
+
+def plot_signal_coef(trace, coefs, param_name, signal_names):
+    """Plot coefficients relating signals to a parameter."""
+    fig, ax = plt.subplots(1, len(coefs), figsize=(6 * len(coefs), 4))
+    for i, coef in enumerate(coefs):
+        var_names = [f'{param_name}_{s}_{coef}' for s in signal_names]
+        az.plot_forest(trace, var_names=var_names, ax=ax[i], combined=True)
+        if i > 0:
+            ax[i].set_yticklabels('')
+        else:
+            ax[i].set_yticklabels(signal_names, fontsize='large')
+        ax[i].set_xlabel(coef)
+        ax[i].set_title('')
+        abs_max = np.max(np.abs(ax[i].get_xlim()))
+        ax[i].set(xlim=(-abs_max, abs_max))
+        ax[i].axvline(0, *ax[i].get_ylim(), color='k')
+    return fig, ax
 
 
 def plot_predictive(
