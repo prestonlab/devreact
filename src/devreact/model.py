@@ -240,6 +240,20 @@ def age_var(name, age, coef_mu, coef_sigma, beta, log=False):
     return param
 
 
+def age_signal_var(names, age, coef_mu, coef_sigma, beta, signal_data, signals):
+    """Generate a parameter whose relationship to a signal varies with age."""
+    x = {}
+    coef = {}
+    for signal in signals:
+        x[signal] = pm.ConstantData(signal, signal_data[signal], dims=['trial'])
+        coef[signal] = {}
+        for name in names:
+            coef[signal][name] = age_var(
+                f'{name}_{signal}', age, coef_mu, coef_sigma, beta
+            )
+    return x, coef
+
+
 def drift_rates(v, s, nt, rng):
     """Generate random drift rates."""
     # sample drift rates with constraint that, on each trial,
