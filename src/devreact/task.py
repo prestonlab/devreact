@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 
-def read_remind(data_file, signals=None):
+def read_remind(data_file, signals=None, signal_names=None):
     """Read raw Remind data."""
     raw = pd.read_table(data_file)
 
@@ -40,8 +40,9 @@ def read_remind(data_file, signals=None):
         }
     )
     if signals is not None:
-        for signal in signals:
-            data[signal] = raw[signal]
+        names = signal_names if signal_names is not None else signals
+        for signal, name in zip(signals, names):
+            data[name] = raw[signal]
     return data
 
 
