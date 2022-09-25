@@ -1,5 +1,7 @@
 """Plotting manuscript figures."""
 
+import os
+import contextlib
 import warnings
 from pkg_resources import resource_filename
 import numpy as np
@@ -15,6 +17,13 @@ def set_style(style_path=None):
     if style_path is None:
         style_path = resource_filename('devreact', 'data/figures.mplstyle')
     plt.style.use(style_path)
+
+
+def savefig(fig, fname, **kwargs):
+    """Save figure while suppressing font subsetting errors."""
+    with open(os.devnull, 'w') as devnull:
+        with contextlib.redirect_stderr(devnull):
+            fig.savefig(fname, **kwargs)
 
 
 def plot_age_params(trace, var_names):
