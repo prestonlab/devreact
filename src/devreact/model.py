@@ -208,7 +208,36 @@ def logp_dual(response_data, n, *params):
 
 
 def age_var(name, age, coef_mu, coef_sigma, beta, log=False):
-    """Generate a parameter that varies with age."""
+    """
+    Generate a parameter that varies with age.
+
+    Parameters
+    ----------
+    name : str
+        Name of the parameter to vary with age.
+
+    age : pymc.ConstantData
+        Mean-centered age in years.
+
+    coef_mu : numpy.ArrayLike
+        Mean of each group-level age coefficient.
+
+    coef_sigma : numpy.ArrayLike
+        Standard deviation of each group-level age coefficient.
+
+    beta : float
+        Spread of the half-Cauchy distribution for subject-level sampling.
+
+    log : bool
+        If true, sampled parameters will be treated as log values and
+        exponentiated in the output variable.
+
+    Returns
+    -------
+    param : pymc.Deterministic
+        The age-varying parameter for each subject, determined using a
+        non-centered parameterization.
+    """
     # coefficients to determine mean over age
     age_b = []
     for i, (mu, sigma) in enumerate(zip(coef_mu, coef_sigma)):
@@ -241,7 +270,44 @@ def age_var(name, age, coef_mu, coef_sigma, beta, log=False):
 
 
 def age_signal_var(names, age, coef_mu, coef_sigma, beta, signal_data, signals):
-    """Generate a parameter whose relationship to a signal varies with age."""
+    """
+    Generate a parameter whose relationship to a signal varies with age.
+
+    Parameters
+    ----------
+    names : list of str
+        Names of parameters that depend on the signals.
+
+    age : pymc.ConstantData
+        Mean-centered age in years.
+
+    coef_mu : numpy.ArrayLike
+        Mean of each group-level age coefficient determining how the slope
+        that determines how the parameter varies with changes in the signal
+        changes with age.
+
+    coef_sigma : numpy.ArrayLike
+        Standard deviation of each group-level age coefficient.
+
+    beta : float
+        Spread of the half-Cauchy distribution for subject-level sampling.
+
+    signal_data : dict of (str: numpy.ArrayLike)
+        Mean-centered values of each signal on each trial. Set missing data to
+        zero so that the signal will not influence the parameter on those
+        trials.
+
+    signals : list of str
+        Signals to include as predictors.
+
+    Returns
+    -------
+    x : dict of (str: pymc.ConstantData)
+        Signal data cast to pymc.ConstantData.
+
+    coef : dict of (str: dict of (str: pymc.Deterministic))
+        Subject-level slope for each signal, parameter combination.
+    """
     x = {}
     coef = {}
     for signal in signals:
