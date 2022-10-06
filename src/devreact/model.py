@@ -6,6 +6,7 @@ import pandas as pd
 import aesara
 import aesara.tensor as at
 import pymc as pm
+import arviz as az
 
 
 def interval_forward(x, a, b):
@@ -499,3 +500,45 @@ def predictive_dataframe(data, group='posterior'):
     )
     df['response_label'] = df['response'].map({0: 'Incorrect', 1: 'Correct'})
     return df
+
+
+def age_stats(trace, var_name, ages):
+    """Calculate parameter statistics as a function of age."""
+    # stack all posterior samples together
+    samples = trace.posterior.stack(dict(sample=['chain', 'draw']))
+
+    # get age coefficients for this parameter
+    coef = []
+    n = 0
+    while True:
+        coef_name = f'{var_name}_b{n}'
+        if coef_name in samples:
+            coef.append(samples[coef_name].values[:, np.newaxis])
+            n += 1
+        else:
+            break
+
+    # for each sample, calculate mean as a function of age
+    a = ages - np.mean(trace.constant_data.age.values)
+    if len(coef) == 2:
+        μ = coef[0] + coef[1] * a
+    elif len(coef) == 3:
+        μ = coef[0] + coef[1] * a + coef[2] * a ** 2
+    else:
+        raise ValueError('Unsupported number of age coefficients.')
+
+    # mean over samples
+    mean = np.mean(μ, axis=0)
+
+    # high-density intervals
+    na = len(ages)
+    lower = np.zeros(na)
+    upper = np.zeros(na)
+    for i in range(na):
+        hdi = az.hdi(μ[:, i])
+        lower[i] = hdi[0]
+        upper[i] = hdi[1]
+
+    # package stats as a function of age
+    stats = pd.DataFrame({'age': ages, 'mean': mean, 'lower': lower, 'upper': upper})
+    return stats
