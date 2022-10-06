@@ -502,6 +502,20 @@ def predictive_dataframe(data, group='posterior'):
     return df
 
 
+def age_parameters(trace, var_names):
+    """Get mean posterior for parameters that vary with age."""
+    params = trace.posterior.mean(['chain', 'draw'])[var_names].to_dataframe()
+    params['age'] = trace.constant_data.age.values
+    results = pd.melt(
+        params.reset_index(),
+        id_vars=['subject', 'age'],
+        value_vars=var_names,
+        value_name='Value',
+        var_name='Parameter',
+    )
+    return results
+
+
 def age_stats(trace, var_name, ages):
     """Calculate parameter statistics as a function of age."""
     # stack all posterior samples together
