@@ -69,6 +69,17 @@ def plot_age_params(trace, var_names):
     return g
 
 
+def plot_signal_slopes(trace, param_name, signal_names, signal_labels, **kwargs):
+    """Plot slopes relating signals to a parameter."""
+    fig, ax = plt.subplots(
+        1, len(signal_names), figsize=(5 * len(signal_names), 4), sharey=True
+    )
+    for i, (signal, roi) in enumerate(zip(signal_names, signal_labels)):
+        plot_age_param(trace, f'{param_name}_{signal}', ax=ax[i], **kwargs)
+        ax[i].set_title(roi)
+    return fig, ax
+
+
 def plot_signal_coef(trace, coefs, param_name, signal_names):
     """Plot coefficients relating signals to a parameter."""
     fig, ax = plt.subplots(1, len(coefs), figsize=(6 * len(coefs), 4))
