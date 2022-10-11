@@ -26,7 +26,7 @@ def savefig(fig, fname, **kwargs):
             fig.savefig(fname, **kwargs)
 
 
-def plot_age_param(trace, var_name, ages, age_ticks=None, ax=None):
+def plot_age_param(trace, var_name, ages, age_ticks=None, absmax=None, ax=None):
     """Plot a parameter that varies with age with confidence bands."""
     if ax is None:
         ax = plt.gca()
@@ -38,6 +38,9 @@ def plot_age_param(trace, var_name, ages, age_ticks=None, ax=None):
     ax.set(xlabel='Age (years)', ylabel=var_name)
     if age_ticks is not None:
         ax.set(xticks=age_ticks, xlim=(age_ticks[0], age_ticks[-1]))
+    if absmax is not None:
+        ax.axhline(0, 0, 1, linestyle='--', color='k')
+        ax.set(ylim=(-absmax, absmax))
     return ax
 
 
