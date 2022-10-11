@@ -27,7 +27,7 @@ def savefig(fig, fname, **kwargs):
 
 
 def plot_age_param(
-    trace, var_name, ages, age_ticks=None, absmax=None, log=False, ax=None
+    trace, var_name, ages, age_ticks=None, absmax=None, color='C0', log=False, ax=None
 ):
     """Plot a parameter that varies with age with confidence bands."""
     if ax is None:
@@ -38,9 +38,11 @@ def plot_age_param(
         stats['lower'] = np.exp(stats['lower'])
         stats['upper'] = np.exp(stats['upper'])
         stats['mean'] = np.exp(stats['mean'])
-    sns.scatterplot(data=param, x='age', y='Value', color='C0', ax=ax)
-    ax.fill_between(stats['age'], stats['lower'], stats['upper'], alpha=0.1)
-    ax.plot(stats['age'], stats['mean'], '-')
+    sns.scatterplot(data=param, x='age', y='Value', color=color, ax=ax)
+    ax.fill_between(
+        stats['age'], stats['lower'], stats['upper'], color=color, alpha=0.1
+    )
+    ax.plot(stats['age'], stats['mean'], '-', color=color)
     ax.set(xlabel='Age (years)', ylabel=var_name)
     if age_ticks is not None:
         ax.set(xticks=age_ticks, xlim=(age_ticks[0], age_ticks[-1]))
