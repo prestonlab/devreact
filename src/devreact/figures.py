@@ -80,17 +80,23 @@ def plot_signal_slopes(trace, param_name, signal_names, signal_labels, **kwargs)
     return fig, ax
 
 
-def plot_signal_coef(trace, coefs, param_name, signal_names):
+def plot_signal_coef(
+    trace, coefs, param_name, signal_names, coef_labels=None, signal_labels=None, **kwargs
+):
     """Plot coefficients relating signals to a parameter."""
+    if coef_labels is None:
+        coef_labels = coefs
+    if signal_labels is None:
+        signal_labels = signal_names
     fig, ax = plt.subplots(1, len(coefs), figsize=(6 * len(coefs), 4))
     for i, coef in enumerate(coefs):
         var_names = [f'{param_name}_{s}_{coef}' for s in signal_names]
-        az.plot_forest(trace, var_names=var_names, ax=ax[i], combined=True)
+        az.plot_forest(trace, var_names=var_names, ax=ax[i], combined=True, **kwargs)
         if i > 0:
             ax[i].set_yticklabels('')
         else:
-            ax[i].set_yticklabels(signal_names[::-1], fontsize='large')
-        ax[i].set_xlabel(coef)
+            ax[i].set_yticklabels(signal_labels[::-1], fontsize='large')
+        ax[i].set_xlabel(coef_labels[i])
         ax[i].set_title('')
         abs_max = np.max(np.abs(ax[i].get_xlim()))
         ax[i].set(xlim=(-abs_max, abs_max))
