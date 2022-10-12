@@ -569,6 +569,6 @@ def parameter_table(trace, param_map):
     upper = hdi.sel({'hdi': 'higher'})[var_names].to_array().to_series()
 
     # create table
-    s_hdi = [f'[{l:.2f}, {u:.2f}]' for l, u in zip(lower, upper)]
+    s_hdi = [f'[{l:.4f}, {u:.4f}]' for l, u in zip(lower, upper)]
     table = pd.DataFrame({'Mean': m.to_numpy(), '94% HDI': s_hdi}, index=var_labels)
     return table
