@@ -556,3 +556,19 @@ def age_stats(trace, var_name, ages):
     # package stats as a function of age
     stats = pd.DataFrame({'age': ages, 'mean': mean, 'lower': lower, 'upper': upper})
     return stats
+
+
+def parameter_table(trace, param_map):
+    """Create a table of posterior parameter estimates."""
+    # get statistics
+    var_names = list(param_map.keys())
+    var_labels = list(param_map.values())
+    m = trace.posterior.mean(['chain', 'draw'])[var_names].to_array().to_series()
+    hdi = az.hdi(trace.posterior)
+    lower = hdi.sel({'hdi': 'lower'})[var_names].to_array().to_series()
+    upper = hdi.sel({'hdi': 'higher'})[var_names].to_array().to_series()
+
+    # create table
+    s_hdi = [f'[{l:.2f}, {u:.2f}]' for l, u in zip(lower, upper)]
+    table = pd.DataFrame({'Mean': m.to_numpy(), '94% HDI': s_hdi}, index=var_labels)
+    return table
