@@ -570,5 +570,7 @@ def parameter_table(trace, param_map):
 
     # create table
     s_hdi = [f'[{l:.4f}, {u:.4f}]' for l, u in zip(lower, upper)]
-    table = pd.DataFrame({'Mean': m.to_numpy(), '94% HDI': s_hdi}, index=var_labels)
+    table = pd.DataFrame({'Mean': m.to_numpy(), '94\% HDI': s_hdi}, index=var_labels)
+    table.index.name = 'Parameter'
+    table = table.reset_index()
     return table
