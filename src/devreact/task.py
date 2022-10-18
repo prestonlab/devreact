@@ -13,7 +13,8 @@ def read_remind(data_file, signals=None, signal_names=None):
     response[raw['rt'].isna()] = np.nan
 
     # define age bins
-    raw['age'] = raw['precise_age_days'] / 365
+    if 'precise_age_days' in raw:
+        raw['age'] = raw['precise_age_days'] / 365
     age_bins = [6, 8, 10, 12, 35]
     age_labels = ['7-8', '9-10', '11-12', '18-35']
     age_bin = pd.cut(raw['age'], age_bins)
