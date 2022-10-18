@@ -563,8 +563,8 @@ def parameter_table(trace, param_map):
     # get statistics
     var_names = list(param_map.keys())
     var_labels = list(param_map.values())
-    m = trace.posterior.mean(['chain', 'draw'])[var_names].to_array().to_series()
-    hdi = az.hdi(trace.posterior)
+    m = trace.posterior[var_names].mean(['chain', 'draw']).to_array().to_series()
+    hdi = az.hdi(trace.posterior[var_names])
     lower = hdi.sel({'hdi': 'lower'})[var_names].to_array().to_series()
     upper = hdi.sel({'hdi': 'higher'})[var_names].to_array().to_series()
 
