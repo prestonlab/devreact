@@ -241,22 +241,8 @@ def plot_predictive_acc(predictive, group='posterior'):
 
 def plot_predictive_rt(predictive, group='posterior', max_time=None):
     """Plot predictive response time by subject."""
-    obs = model.observed_dataframe(predictive)
-    ppc = model.predictive_dataframe(predictive, group)
-
-    groups = ['subject', 'trial_type', 'response_label']
-    rt = pd.concat(
-        [
-            obs.groupby(groups)['response_time'].mean(),
-            ppc.groupby(groups)['response_time'].mean(),
-        ], axis=1, keys=['Observed', 'Predictive']
-    ).reset_index()
-
-    rt['trial_type'] = rt['trial_type'].str.capitalize()
-    rt['age'] = np.repeat(
-        predictive.constant_data.age.values,
-        rt['trial_type'].nunique() * rt['response_label'].nunique(),
-    )
+    rt = model.response_time_stats(predictive, group=group)
+    rt = rt.rename(columns={'age': 'Age'})
     g = sns.relplot(
         data=rt,
         x='Predictive',
@@ -265,7 +251,7 @@ def plot_predictive_rt(predictive, group='posterior', max_time=None):
         palette='crest',
         alpha=0.6,
         row='trial_type',
-        col='response_label',
+        col='accuracy',
         clip_on=False,
         height=3.5,
         aspect=.8,
