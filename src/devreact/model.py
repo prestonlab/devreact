@@ -517,7 +517,7 @@ def predictive_dataframe(data, group='posterior'):
     return df
 
 
-def predictive_means_dataframe(data, group='posterior'):
+def predictive_means_dataframe(data, group='posterior', max_time=None):
     """Get dataframe of mean response time by condition and accuracy."""
     if group == 'prior':
         pps = data.prior_predictive
@@ -562,6 +562,10 @@ def predictive_means_dataframe(data, group='posterior'):
             sind = dict(subject=subject, trial_type=trial_type)
             r = response.loc[sind].values
             rt = response_time.loc[sind].values
+
+            # remove responses over time limit
+            if max_time is not None:
+                rt[rt > max_time] = np.nan
             for a, accuracy in enumerate(rtm.coords['accuracy'].values):
                 # remove responses for other accuracy bin
                 temp = rt.copy()
