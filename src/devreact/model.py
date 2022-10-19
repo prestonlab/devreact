@@ -485,6 +485,19 @@ def observed_dataframe(data):
     return df
 
 
+def observed_means_dataframe(data):
+    """Get dataframe of mean response time by condition and accuracy."""
+    stats = observed_dataframe(data)
+    m = (
+        stats.groupby(['subject', 'trial_type', 'response_label']).mean()
+        .reset_index()
+        .drop(columns=['response'])
+        .rename(columns={'response_label': 'accuracy'})
+    )
+    m.columns.name = None
+    return m
+
+
 def predictive_dataframe(data, group='posterior'):
     """Convert predictive data to DataFrame format."""
     if group == 'prior':
