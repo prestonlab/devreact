@@ -1,8 +1,10 @@
 """Model memory retrieval decision responses."""
 
+import warnings
 import math
 import numpy as np
 import pandas as pd
+import xarray as xr
 import aesara
 import aesara.tensor as at
 import pymc as pm
@@ -500,6 +502,70 @@ def predictive_dataframe(data, group='posterior'):
     )
     df['response_label'] = df['response'].map({0: 'Incorrect', 1: 'Correct'})
     return df
+
+
+def predictive_means_dataframe(data, group='posterior'):
+    """Get dataframe of mean response time by condition and accuracy."""
+    if group == 'prior':
+        pps = data.prior_predictive
+    elif group == 'posterior':
+        pps = data.posterior_predictive
+    else:
+        raise ValueError(f'Invalid group: {group}')
+    pps = set_trial_coords(data.constant_data, pps)
+
+    # create trial index
+    df_index = pd.DataFrame(
+        {
+            'subject': pps.response.coords['subject'].values,
+            'trial_type': pps.response.coords['trial_type'].values,
+        }
+    )
+    df_index['subject_trial'] = df_index.groupby(['subject', 'trial_type']).cumcount()
+    mi = pd.MultiIndex.from_frame(df_index)
+
+    # reshape to get subject, trial type, trial, and sample coordinates
+    shaped = (
+        pps.response.assign_coords(trial=mi)
+        .stack(sample=('chain', 'draw'))
+        .unstack('trial')
+    )
+
+    # unpack coordinates
+    response = shaped.sel(component='response')
+    response_time = shaped.sel(component='response_time')
+
+    # initialize data array with means
+    acc = ['Incorrect', 'Correct']
+    rtm = xr.DataArray(
+        coords=[shaped.coords['subject'], shaped.coords['trial_type'], acc],
+        dims=['subject', 'trial_type', 'accuracy'],
+    )
+
+    # calculate mean response time
+    for subject in rtm.coords['subject'].values:
+        for trial_type in rtm.coords['trial_type'].values:
+            # samples for all trials in this condition
+            sind = dict(subject=subject, trial_type=trial_type)
+            r = response.loc[sind].values
+            rt = response_time.loc[sind].values
+            for a, accuracy in enumerate(rtm.coords['accuracy'].values):
+                # remove responses for other accuracy bin
+                temp = rt.copy()
+                temp[r != a] = np.nan
+
+                # calculate mean over trials, then over samples
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
+                    m = np.nanmean(np.nanmean(temp, axis=1))
+                ind = dict(
+                    subject=subject,
+                    trial_type=trial_type,
+                    accuracy=accuracy,
+                )
+                rtm.loc[ind] = m
+    stats = rtm.to_dataframe(name='response_time').reset_index()
+    return stats
 
 
 def age_parameters(trace, var_names):
