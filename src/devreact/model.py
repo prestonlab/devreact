@@ -585,6 +585,30 @@ def predictive_means_dataframe(data, group='posterior', max_time=None):
     return stats
 
 
+def response_time_stats(predictive, group='posterior', max_time=None):
+    """Observed and predictive response time statistics."""
+    # mean response times for observed and predictive samples
+    obs_mean = observed_means_dataframe(predictive)
+    pps_mean = predictive_means_dataframe(predictive, group=group, max_time=max_time)
+
+    # merge into one dataframe
+    groups = ['subject', 'trial_type', 'accuracy']
+    rt = (
+        pd.merge(obs_mean, pps_mean, on=groups, how='outer')
+        .rename(
+            columns={'response_time_x': 'Observed', 'response_time_y': 'Predictive'}
+        )
+    )
+    rt['trial_type'] = rt['trial_type'].str.capitalize()
+
+    # add age column
+    rt['age'] = np.repeat(
+        predictive.constant_data.age.values,
+        rt['trial_type'].nunique() * rt['accuracy'].nunique(),
+    )
+    return rt
+
+
 def age_parameters(trace, var_names):
     """Get mean posterior for parameters that vary with age."""
     params = trace.posterior.mean(['chain', 'draw'])[var_names].to_dataframe()
