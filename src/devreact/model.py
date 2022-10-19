@@ -517,7 +517,9 @@ def predictive_dataframe(data, group='posterior'):
     return df
 
 
-def predictive_means_dataframe(data, group='posterior', max_time=None):
+def predictive_means_dataframe(
+    data, group='posterior', max_time=None, min_responses=None
+):
     """Get dataframe of mean response time by condition and accuracy."""
     if group == 'prior':
         pps = data.prior_predictive
@@ -571,6 +573,11 @@ def predictive_means_dataframe(data, group='posterior', max_time=None):
                 temp = rt.copy()
                 temp[r != a] = np.nan
 
+                if min_responses is not None:
+                    # exclude samples if less than minimal number of responses
+                    n = np.sum(~np.isnan(temp), axis=1)
+                    temp[n < min_responses, :] = np.nan
+
                 # calculate mean over trials, then over samples
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -585,11 +592,15 @@ def predictive_means_dataframe(data, group='posterior', max_time=None):
     return stats
 
 
-def response_time_stats(predictive, group='posterior', max_time=None):
+def response_time_stats(
+    predictive, group='posterior', max_time=None, min_responses=None
+):
     """Observed and predictive response time statistics."""
     # mean response times for observed and predictive samples
     obs_mean = observed_means_dataframe(predictive)
-    pps_mean = predictive_means_dataframe(predictive, group=group, max_time=max_time)
+    pps_mean = predictive_means_dataframe(
+        predictive, group=group, max_time=max_time, min_responses=min_responses
+    )
 
     # merge into one dataframe
     groups = ['subject', 'trial_type', 'accuracy']
