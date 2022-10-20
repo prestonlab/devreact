@@ -222,7 +222,7 @@ def plot_predictive_acc(predictive, group='posterior'):
     accuracy['Age'] = np.repeat(
         predictive.constant_data.age.values, accuracy['trial_type'].nunique()
     )
-    ticks = np.linspace(0, 1, 5)
+    ticks = np.linspace(0, 1, 6)
     g = sns.relplot(
         data=accuracy,
         x='Predictive',
