@@ -185,8 +185,9 @@ def plot_predictive(
                 warnings.simplefilter("ignore")
                 sns.histplot(times[match], ax=ax[i, j], **hist_kwargs, **obs_kwargs)
 
+    ticks = np.arange(0, max_time + 1, 2)
     for c in range(nc):
-        ax[0, c].set(title=labels['col'][c], xlim=[0, max_time])
+        ax[0, c].set(title=labels['col'][c], xlim=[0, max_time], xticks=ticks)
         ax[nr - 1, c].set(xlabel='Response time')
     for r in range(nr):
         ax[r, 0].set(ylabel=f'{labels["row"][r]} density')
@@ -254,7 +255,7 @@ def plot_predictive_rt(predictive, group='posterior', max_time=None):
         col='accuracy',
         clip_on=False,
         height=3.5,
-        aspect=.8,
+        aspect=.9,
     )
     g.set_titles(template='{row_name} {col_name}')
     if max_time is not None:
