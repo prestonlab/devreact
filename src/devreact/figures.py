@@ -232,7 +232,7 @@ def plot_predictive_acc(predictive, group='posterior'):
         alpha=0.6,
         col='trial_type',
         clip_on=False,
-        height=3.5,
+        height=4.5,
         aspect=.8,
     )
     for ax in g.axes.ravel():
@@ -257,7 +257,7 @@ def plot_predictive_rt(predictive, group='posterior', max_time=None):
         row='trial_type',
         col='accuracy',
         clip_on=False,
-        height=3.5,
+        height=4.5,
         aspect=.9,
     )
     g.set_titles(template='{row_name} {col_name}')
