@@ -147,7 +147,7 @@ def plot_predictive(
 
     nr = len(np.unique(values['row']))
     nc = len(np.unique(values['col']))
-    fig, ax = plt.subplots(nr, nc, sharex=True, sharey=True, figsize=(3 * nc, 3 * nr))
+    fig, ax = plt.subplots(nr, nc, sharex=True, sharey=True, figsize=(4 * nc, 3.5 * nr))
     hist_kwargs = {
         'element': 'poly',
         'fill': False,
