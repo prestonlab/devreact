@@ -188,7 +188,7 @@ def plot_predictive(
     ticks = np.arange(0, max_time + 1, 2)
     for c in range(nc):
         ax[0, c].set(title=labels['col'][c], xlim=[0, max_time], xticks=ticks)
-        ax[nr - 1, c].set(xlabel='Response time')
+        ax[nr - 1, c].set(xlabel='Response time (s)')
     for r in range(nr):
         ax[r, 0].set(ylabel=f'{labels["row"][r]} density')
     return fig, ax
@@ -238,6 +238,7 @@ def plot_predictive_acc(predictive, group='posterior'):
     for ax in g.axes.ravel():
         ax.plot([0, 1], [0, 1], '-k', zorder=0, linewidth=0.5)
     g.set(xlim=[0, 1], ylim=[0, 1], xticks=ticks, yticks=ticks)
+    g.set(xlabel='Predictive accuracy', ylabel='Observed accuracy')
     g.set_titles(template='{col_name}')
     return g
 
@@ -260,6 +261,7 @@ def plot_predictive_rt(predictive, group='posterior', max_time=None):
         aspect=.9,
     )
     g.set_titles(template='{row_name} {col_name}')
+    g.set(xlabel='Predictive RT (s)', ylabel='Observed RT (s)')
     if max_time is not None:
         for ax in g.axes.ravel():
             ax.plot([0, max_time], [0, max_time], '-k', zorder=0, linewidth=0.5)
