@@ -235,6 +235,8 @@ def plot_predictive_acc(predictive, group='posterior'):
         height=3.5,
         aspect=.8,
     )
+    for ax in g.axes.ravel():
+        ax.plot([0, 1], [0, 1], '-k', zorder=0, linewidth=0.5)
     g.set(xlim=[0, 1], ylim=[0, 1], xticks=ticks, yticks=ticks)
     g.set_titles(template='{col_name}')
     return g
