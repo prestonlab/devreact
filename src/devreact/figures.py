@@ -241,7 +241,7 @@ def plot_predictive_acc(predictive, group='posterior'):
 
 def plot_predictive_rt(predictive, group='posterior', max_time=None):
     """Plot predictive response time by subject."""
-    rt = model.response_time_stats(predictive, group=group)
+    rt = model.response_time_stats(predictive, group=group, max_time=max_time)
     rt = rt.rename(columns={'age': 'Age'})
     g = sns.relplot(
         data=rt,
