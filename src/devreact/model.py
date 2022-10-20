@@ -567,7 +567,10 @@ def predictive_means_dataframe(
 
             # remove responses over time limit
             if max_time is not None:
-                rt[rt > max_time] = np.nan
+                # if the mean response time for a sample was late (rare), exclude
+                exclude = np.nanmean(rt, 1) > max_time
+                rt[exclude, :] = np.nan
+
             for a, accuracy in enumerate(rtm.coords['accuracy'].values):
                 # remove responses for other accuracy bin
                 temp = rt.copy()
