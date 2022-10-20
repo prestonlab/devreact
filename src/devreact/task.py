@@ -1,6 +1,7 @@
 """Utilities for reading task data."""
 
 import numpy as np
+from scipy import stats
 import pandas as pd
 
 
@@ -44,7 +45,9 @@ def read_remind(data_file, signals=None, signal_names=None):
     if signals is not None:
         names = signal_names if signal_names is not None else signals
         for signal, name in zip(signals, names):
-            data[name] = raw[signal]
+            data[name] = raw.groupby(['id', 'run'])[signal].transform(
+                stats.zscore, nan_policy='omit'
+            )
     return data
 
 
