@@ -233,7 +233,7 @@ def plot_predictive_acc(predictive, group='posterior'):
         col='trial_type',
         clip_on=False,
         height=4.5,
-        aspect=.8,
+        aspect=.9,
     )
     for ax in g.axes.ravel():
         ax.plot([0, 1], [0, 1], '-k', zorder=0, linewidth=0.5)
