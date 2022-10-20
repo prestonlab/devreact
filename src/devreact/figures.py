@@ -258,5 +258,6 @@ def plot_predictive_rt(predictive, group='posterior', max_time=None):
     )
     g.set_titles(template='{row_name} {col_name}')
     if max_time is not None:
-        g.set(xlim=[0, max_time], ylim=[0, max_time])
+        ticks = np.arange(0, max_time + 1, 2)
+        g.set(xlim=[0, max_time], ylim=[0, max_time], xticks=ticks, yticks=ticks)
     return g
