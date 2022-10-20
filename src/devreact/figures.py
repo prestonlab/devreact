@@ -247,7 +247,7 @@ def plot_predictive_rt(predictive, group='posterior', max_time=None):
         data=rt,
         x='Predictive',
         y='Observed',
-        hue='age',
+        hue='Age',
         palette='crest',
         alpha=0.6,
         row='trial_type',
