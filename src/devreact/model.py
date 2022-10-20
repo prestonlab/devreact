@@ -622,7 +622,7 @@ def response_time_stats(
 
 def age_parameters(trace, var_names):
     """Get mean posterior for parameters that vary with age."""
-    params = trace.posterior.mean(['chain', 'draw'])[var_names].to_dataframe()
+    params = trace.posterior[var_names].mean(['chain', 'draw']).to_dataframe()
     params['age'] = trace.constant_data.age.values
     results = pd.melt(
         params.reset_index(),
