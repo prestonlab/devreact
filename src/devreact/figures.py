@@ -219,7 +219,7 @@ def plot_predictive_acc(predictive, group='posterior'):
     )
     accuracy = pd.concat([o, p], axis=1, keys=['Observed', 'Predictive']).reset_index()
     accuracy['trial_type'] = accuracy['trial_type'].str.capitalize()
-    accuracy['age'] = np.repeat(
+    accuracy['Age'] = np.repeat(
         predictive.constant_data.age.values, accuracy['trial_type'].nunique()
     )
     ticks = np.linspace(0, 1, 5)
@@ -227,7 +227,7 @@ def plot_predictive_acc(predictive, group='posterior'):
         data=accuracy,
         x='Predictive',
         y='Observed',
-        hue='age',
+        hue='Age',
         palette='crest',
         alpha=0.6,
         col='trial_type',
