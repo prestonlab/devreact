@@ -145,16 +145,36 @@ def plot_predictive(
         values[position] = v
         labels[position] = [s.capitalize() for s in n]
 
+    # determine the number of trials in each condition for normalization.
+    # We want the "defective" distributions that sum to 1 across all responses
+    # in a given condition and age group
     nr = len(np.unique(values['row']))
     nc = len(np.unique(values['col']))
+    n_trials = np.zeros((nr, nc))
+    for i, R in enumerate(names['row']):
+        for j, C in enumerate(names['col']):
+            if (
+                ((col == 'age') & (row == 'trial_type')) |
+                ((row == 'age') & (col == 'trial_type'))
+            ):
+                n_trials[i, j] = np.count_nonzero(
+                    (values['row'] == R) & (values['col'] == C)
+                )
+            elif col == 'age':
+                n_trials[i, j] = np.count_nonzero(values['col'] == C)
+            elif row == 'age':
+                n_trials[i, j] = np.count_nonzero(values['row'] == R)
+            elif col == 'trial_type':
+                n_trials[i, j] = np.count_nonzero(values['col'] == C)
+            elif row == 'trial_type':
+                n_trials[i, j] = np.count_nonzero(values['row'] == R)
+            else:
+                n_trials[i, j] = len(values[row])
+
     fig, ax = plt.subplots(nr, nc, sharex=True, sharey=True, figsize=(4 * nc, 3.5 * nr))
-    hist_kwargs = {
-        'element': 'poly',
-        'fill': False,
-        'binrange': (0, max_time),
-        'binwidth': 0.25,
-        'stat': 'density',
-    }
+    binwidth = 0.25
+    bins = np.arange(0, max_time + binwidth / 2, binwidth)
+    centers = bins[:-1] + (bins[1:] - bins[:-1]) / 2
     pps_kwargs = {'linewidth': 0.5, 'alpha': 0.5, 'color': 'C0'}
     obs_kwargs = {'linewidth': 1, 'color': 'k'}
 
@@ -172,7 +192,10 @@ def plot_predictive(
                     match &= tt == trial_type
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    sns.histplot(times[match], ax=ax[i, j], **hist_kwargs, **pps_kwargs)
+                    hist, _ = np.histogram(times[match], bins=bins)
+                    ax[i, j].plot(
+                        centers, hist / (n_trials[i, j] * binwidth), **pps_kwargs
+                    )
 
     # plot the observed data
     times = predictive.observed_data.sel(component='response_time').response.values
@@ -183,14 +206,17 @@ def plot_predictive(
                 match &= tt == trial_type
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                sns.histplot(times[match], ax=ax[i, j], **hist_kwargs, **obs_kwargs)
+                hist, _ = np.histogram(times[match], bins=bins)
+                ax[i, j].plot(
+                    centers, hist / (n_trials[i, j] * binwidth), **obs_kwargs
+                )
 
     ticks = np.arange(0, max_time + 1, 2)
     for c in range(nc):
         ax[0, c].set(title=labels['col'][c], xlim=[0, max_time], xticks=ticks)
         ax[nr - 1, c].set(xlabel='Response time (s)')
     for r in range(nr):
-        ax[r, 0].set(ylabel=f'{labels["row"][r]} density')
+        ax[r, 0].set(ylabel=f'{labels["row"][r]} frequency')
     return fig, ax
 
 
