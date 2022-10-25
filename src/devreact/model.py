@@ -623,6 +623,49 @@ def response_time_stats(
     return rt
 
 
+def response_time_trial(predictive, group='posterior', max_time=None):
+    """Observed and predictive response times for each trial."""
+    if group == 'prior':
+        pps = predictive.prior_predictive
+    elif group == 'posterior':
+        pps = predictive.posterior_predictive
+    else:
+        raise ValueError(f'Invalid group: {group}')
+    pps = set_trial_coords(predictive.constant_data, pps)
+
+    # observed trials
+    obs = set_trial_coords(predictive.constant_data, predictive.observed_data)
+    obs_mean = obs.sel(component='response_time').to_dataframe().reset_index()
+
+    # mean over predictive samples for each trial
+    pps = set_trial_coords(predictive.constant_data, pps)
+    samples = pps.sel(component='response_time').stack(dict(sample=['chain', 'draw']))
+    sample_mean = samples.mean('trial')
+
+    # exclude samples whose mean over trials is past the response deadline
+    m = samples.loc[dict(sample=sample_mean.response <= max_time)].mean('sample')
+    pps_mean = m.to_dataframe().reset_index()
+
+    # merge into one dataframe
+    groups = ['subject', 'trial_type', 'component', 'trial']
+    rt = (
+        pd.merge(obs_mean, pps_mean, on=groups, how='outer')
+        .rename(columns={'response_x': 'Observed', 'response_y': 'Predictive'})
+    )
+    rt['trial_type'] = rt['trial_type'].str.capitalize()
+
+    # add age column
+    subject_index = predictive.constant_data.subject_index.values
+    rt['age'] = predictive.constant_data.age.values[subject_index]
+    bin_names = np.array(['Age 7-8', 'Age 9-10', 'Age 11-12', 'Age 18-35'])
+    age_bin_index = predictive.constant_data.age_bin_index.values[subject_index]
+    rt['age_bin'] = bin_names[age_bin_index]
+    rt['age_bin'] = rt['age_bin'].astype('category').cat.set_categories(
+        bin_names, ordered=True
+    )
+    return rt
+
+
 def age_parameters(trace, var_names):
     """Get mean posterior for parameters that vary with age."""
     params = trace.posterior[var_names].mean(['chain', 'draw']).to_dataframe()
