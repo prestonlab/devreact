@@ -122,7 +122,7 @@ def plot_predictive(
     else:
         raise ValueError(f'Invalid group: {group}')
     samples = pps.stack({'sample': ['chain', 'draw']})
-    m = samples.dims['sample']
+    m = samples.sizes['sample']
 
     factors = {'row': row, 'col': col}
     names = {}
