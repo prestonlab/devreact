@@ -314,7 +314,12 @@ def age_signal_var(names, age, coef_mu, coef_sigma, beta, signal_data, signals):
     x = {}
     coef = {}
     for signal in signals:
-        x[signal] = pm.ConstantData(signal, signal_data[signal], dims=['trial'])
+        s = signal_data[signal]
+        data = pt.as_tensor(s)
+        data_unobs = pm.Normal(f"{signal}_unobs", 0, 1, shape=(np.isnan(s).sum(),))
+        data = pt.set_subtensor(data[np.isnan(s)], data_unobs)
+
+        x[signal] = pm.Deterministic(signal, data, dims=['trial'])
         coef[signal] = {}
         for name in names:
             coef[signal][name] = age_var(
