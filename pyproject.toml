@@ -23,7 +23,7 @@ authors = ["Neal Morton <mortonne@gmail.com>"]
 license = "GPL-3.0-or-later"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.9,<3.12"
 numpy = "^1.23.2"
 scipy = "^1.9.0"
 pandas = "^1.4.3"
@@ -31,8 +31,8 @@ seaborn = "^0.11.2"
 matplotlib = "^3.5.3"
 watermark = "^2.3.1"
 jupyterlab = "^3.4.5"
-pymc = "^4.1.5"
-arviz = "^0.12.1"
+pymc = "^5"
+arviz = "^0.16"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"
