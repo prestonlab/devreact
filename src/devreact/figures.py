@@ -130,7 +130,7 @@ def plot_predictive(
     labels = {}
     for position, factor in factors.items():
         if factor == 'trial_type':
-            n = np.array(['direct', 'inference'])
+            n = np.array(['memory', 'inference'])
             v = n[predictive.constant_data.trial_type_index.values]
         elif factor == 'accuracy':
             n = np.array(['correct', 'incorrect'])
@@ -245,6 +245,7 @@ def plot_predictive_acc(predictive, group='posterior'):
     )
     accuracy = pd.concat([o, p], axis=1, keys=['Observed', 'Predictive']).reset_index()
     accuracy['trial_type'] = accuracy['trial_type'].str.capitalize()
+    accuracy['trial_type'] = accuracy['trial_type'].map({'Direct': 'Memory', 'Indirect': 'Inference'})
     accuracy['Age'] = np.repeat(
         predictive.constant_data.age.values, accuracy['trial_type'].nunique()
     )
@@ -272,6 +273,7 @@ def plot_predictive_acc(predictive, group='posterior'):
 def plot_predictive_rt(predictive, group='posterior', max_time=None):
     """Plot predictive response time by subject."""
     rt = model.response_time_stats(predictive, group=group, max_time=max_time)
+    rt['trial_type'] = rt['trial_type'].map({'Direct': 'Memory', 'Indirect': 'Inference'})
     rt = rt.rename(columns={'age': 'Age'})
     g = sns.relplot(
         data=rt,
