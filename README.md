@@ -1,4 +1,6 @@
 # devreact
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19364577.svg)](https://doi.org/10.5281/zenodo.19364577)
+
 Linear ballistic accumulator model of reaction time through development.
 
 ## Installation
