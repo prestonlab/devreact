@@ -4,6 +4,7 @@ description = "DevReact: Modeling of developmental changes in memory-based decis
 version = "0.1.0"
 readme = "README.md"
 license = {file = "LICENSE"}
+requires-python = ">=3.13"
 authors = [
     {name = "Neal W Morton", email = "mortonne@gmail.com"},
 ]
@@ -14,29 +15,15 @@ classifiers = [
     "Operating System :: OS Independent"
 ]
 urls = {project = "https://github.com/prestonlab/devreact"}
-
-[tool.poetry]
-name = "devreact"
-version = "0.1.0"
-description = "DevReact: Modeling of developmental changes in memory-based decision making"
-authors = ["Neal Morton <mortonne@gmail.com>"]
-license = "GPL-3.0-or-later"
-
-[tool.poetry.dependencies]
-python = ">=3.9,<3.12"
-numpy = "^1.23.2"
-scipy = "^1.9.0"
-pandas = "^1.4.3"
-seaborn = "^0.11.2"
-matplotlib = "^3.5.3"
-watermark = "^2.3.1"
-jupyterlab = "^3.4.5"
-pymc = "^5"
-arviz = "^0.16"
-
-[tool.poetry.dev-dependencies]
-black = "^22.6.0"
+dependencies = [
+    "ipywidgets>=8.1.8",
+    "jupyterlab>=4.5.6",
+    "pymc>=5.28.3",
+    "scipy-stubs~=1.17.1",
+    "seaborn>=0.13.2",
+    "watermark>=2.6.0",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.9.13,<0.10.0"]
+build-backend = "uv_build"
