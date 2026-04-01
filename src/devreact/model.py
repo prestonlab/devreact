@@ -192,21 +192,21 @@ def function_pdf_dual():
 def logp_single(response_data, n, *params):
     """Calculate log probability using pytensor."""
     p = pdf_single(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.inf)))
     return ll
 
 
 def logp_separate(response_data, n, *params):
     """Calculate log probability using pytensor."""
     p = pdf_separate(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.inf)))
     return ll
 
 
 def logp_dual(response_data, n, *params):
     """Calculate log probability using pytensor."""
     p = pdf_dual(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.inf)))
     return ll
 
 
