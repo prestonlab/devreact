@@ -134,7 +134,7 @@ def plot_predictive(
             v = n[predictive.constant_data.trial_type_index.values]
         elif factor == 'accuracy':
             n = np.array(['correct', 'incorrect'])
-            v = n[1 - predictive.constant_data.x.values[:, 0].astype(int)]
+            v = n[1 - predictive.observed_data.response.values[:, 0].astype(int)]
         elif factor == 'age':
             n = np.array(['Age 7-8', 'Age 9-10', 'Age 11-12', 'Age 18-35'])
             sind = predictive.constant_data.subject_index.values
