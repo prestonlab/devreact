@@ -5,8 +5,8 @@ import math
 import numpy as np
 import pandas as pd
 import xarray as xr
-import aesara
-import aesara.tensor as at
+import pytensor
+import pytensor.tensor as pt
 import pymc as pm
 import arviz as az
 
@@ -49,7 +49,7 @@ def tcdf(t, A, b, v, s):
 
 
 def pdf_single(response_data, n, s, τ, A, b, v1, v2):
-    """Calculate probability density function for 3AFC using Aesara."""
+    """Calculate probability density function for 3AFC using pytensor."""
     i = response_data[:, 0]
     t = response_data[:, 1] - τ
 
@@ -66,7 +66,7 @@ def pdf_single(response_data, n, s, τ, A, b, v1, v2):
     c2 = p2 * n1 * n2
 
     # calculate probability of this response and rt
-    p = at.switch(at.eq(i, 1), c1, 2 * c2)
+    p = pt.switch(pt.eq(i, 1), c1, 2 * c2)
     return p
 
 
@@ -76,8 +76,8 @@ def pdf_separate(response_data, n, s, τ, A, b, v1, v2, v3, v4):
     t = response_data[:, 1] - τ
 
     # PDF for each accumulator
-    v1a = at.switch(at.eq(n, 1), v1, v2)
-    v2a = at.switch(at.eq(n, 1), v3, v4)
+    v1a = pt.switch(pt.eq(n, 1), v1, v2)
+    v2a = pt.switch(pt.eq(n, 1), v3, v4)
     p1 = tpdf(t, A, b, v1a, s)
     p2 = tpdf(t, A, b, v2a, s)
 
@@ -90,7 +90,7 @@ def pdf_separate(response_data, n, s, τ, A, b, v1, v2, v3, v4):
     c2 = p2 * n1 * n2
 
     # calculate probability of this response and rt
-    p = at.switch(at.eq(i, 1), c1, 2 * c2)
+    p = pt.switch(pt.eq(i, 1), c1, 2 * c2)
     return p
 
 
@@ -101,7 +101,7 @@ def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3, v4):
 
     # PDF for each accumulator
     v2a = v2 * r ** (n - 1)
-    v3a = at.switch(at.eq(n, 1), v3, v4)
+    v3a = pt.switch(pt.eq(n, 1), v3, v4)
     p1 = tpdf(t, A, b, v1, s)
     p2 = tpdf(t, A, b, v2a, s)
     p3 = tpdf(t, A, b, v3a, s)
@@ -117,96 +117,96 @@ def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3, v4):
     c3 = p3 * n1 * n2 * n3
 
     # calculate probability of this response and rt
-    p = at.switch(at.eq(i, 1), c1 + c2, 2 * c3)
+    p = pt.switch(pt.eq(i, 1), c1 + c2, 2 * c3)
     return p
 
 
 def function_pdf_single():
-    """Generate an Aesara function to evaluate the PDF."""
+    """Generate a pytensor function to evaluate the PDF."""
     # time and response vary by trial
-    response = at.dmatrix('r')
-    n = at.ivector('n')
+    response = pt.dmatrix('r')
+    n = pt.ivector('n')
 
     # parameters are fixed over trial
     params = [
-        at.dscalar('s'),
-        at.dscalar('τ'),
-        at.dscalar('A'),
-        at.dscalar('b'),
-        at.dscalar('v1'),
-        at.dscalar('v2'),
+        pt.dscalar('s'),
+        pt.dscalar('τ'),
+        pt.dscalar('A'),
+        pt.dscalar('b'),
+        pt.dscalar('v1'),
+        pt.dscalar('v2'),
     ]
 
     p = pdf_single(response, n, *params)
-    f = aesara.function([response, n, *params], p, on_unused_input='ignore')
+    f = pytensor.function([response, n, *params], p, on_unused_input='ignore')
     return f
 
 
 def function_pdf_separate():
-    """Generate an Aesara function to evaluate the separate-model PDF."""
+    """Generate a pytensor function to evaluate the separate-model PDF."""
     # time and response vary by trial
-    response = at.dmatrix('r')
-    n = at.ivector('n')
+    response = pt.dmatrix('r')
+    n = pt.ivector('n')
 
     # parameters are fixed over trial
     params = [
-        at.dscalar('s'),
-        at.dscalar('τ'),
-        at.dscalar('A'),
-        at.dscalar('b'),
-        at.dscalar('v1'),
-        at.dscalar('v2'),
-        at.dscalar('v3'),
-        at.dscalar('v4'),
+        pt.dscalar('s'),
+        pt.dscalar('τ'),
+        pt.dscalar('A'),
+        pt.dscalar('b'),
+        pt.dscalar('v1'),
+        pt.dscalar('v2'),
+        pt.dscalar('v3'),
+        pt.dscalar('v4'),
     ]
 
     p = pdf_separate(response, n, *params)
-    f = aesara.function([response, n, *params], p)
+    f = pytensor.function([response, n, *params], p)
     return f
 
 
 def function_pdf_dual():
-    """Generate an Aesara function to evaluate the dual-model PDF."""
+    """Generate a pytensor function to evaluate the dual-model PDF."""
     # time and response vary by trial
-    response = at.dmatrix('r')
-    n = at.ivector('n')
+    response = pt.dmatrix('r')
+    n = pt.ivector('n')
 
     # parameters are fixed over trial
     params = [
-        at.dscalar('s'),
-        at.dscalar('τ'),
-        at.dscalar('A'),
-        at.dscalar('b'),
-        at.dscalar('v1'),
-        at.dscalar('v2'),
-        at.dscalar('r'),
-        at.dscalar('v3'),
-        at.dscalar('v4'),
+        pt.dscalar('s'),
+        pt.dscalar('τ'),
+        pt.dscalar('A'),
+        pt.dscalar('b'),
+        pt.dscalar('v1'),
+        pt.dscalar('v2'),
+        pt.dscalar('r'),
+        pt.dscalar('v3'),
+        pt.dscalar('v4'),
     ]
 
     p = pdf_dual(response, n, *params)
-    f = aesara.function([response, n, *params], p)
+    f = pytensor.function([response, n, *params], p)
     return f
 
 
 def logp_single(response_data, n, *params):
-    """Calculate log probability using Aesara."""
+    """Calculate log probability using pytensor."""
     p = pdf_single(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.inf)))
     return ll
 
 
 def logp_separate(response_data, n, *params):
-    """Calculate log probability using Aesara."""
+    """Calculate log probability using pytensor."""
     p = pdf_separate(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.inf)))
     return ll
 
 
 def logp_dual(response_data, n, *params):
-    """Calculate log probability using Aesara."""
+    """Calculate log probability using pytensor."""
     p = pdf_dual(response_data, n, *params)
-    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.Inf)))
+    ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.inf)))
     return ll
 
 
@@ -314,7 +314,12 @@ def age_signal_var(names, age, coef_mu, coef_sigma, beta, signal_data, signals):
     x = {}
     coef = {}
     for signal in signals:
-        x[signal] = pm.ConstantData(signal, signal_data[signal], dims=['trial'])
+        s = signal_data[signal]
+        data = pt.as_tensor(s)
+        data_unobs = pm.Normal(f"{signal}_unobs", 0, 1, shape=(np.isnan(s).sum(),))
+        data = pt.set_subtensor(data[np.isnan(s)], data_unobs)
+
+        x[signal] = pm.Deterministic(signal, data, dims=['trial'])
         coef[signal] = {}
         for name in names:
             coef[signal][name] = age_var(
@@ -334,7 +339,11 @@ def drift_rates(v, s, nt, rng):
     while not valid:
         # generate random accumulator drift rates
         c = np.zeros((nt, nv))
+        if isinstance(s, np.ndarray) and s.ndim > 1:
+            s = s[0]
         for i in range(nv):
+            if isinstance(v[i], np.ndarray) and v[i].ndim > 1:
+                v[i] = v[i][0]
             c[:, i] = rng.normal(loc=v[i], scale=s, size=nt)
         valid_c = c[np.any(c > 0, axis=1), :]
 
@@ -376,6 +385,8 @@ def random_single(n, s, τ, A, b, v1, v2, rng, size=None):
     # sample start point and drift on each trial
     k = rng.uniform(0, A, size=(size[0], 3))
     d = drift_rates([v1, v2, v2], s, size[0], rng)
+    if isinstance(b, np.ndarray) and b.ndim > 1:
+        b = b[0][:, np.newaxis]
     t = τ + ((b - k) / d)
 
     # score responses (0 is correct, 1 or 2 is incorrect)
@@ -402,6 +413,8 @@ def random_separate(n, s, τ, A, b, v1, v2, v3, v4, rng, size=None):
     v2a = np.where(n == 1, v3, v4)
     k = rng.uniform(0, A, size=(size[0], 3))
     d = drift_rates([v1a, v2a, v2a], s, size[0], rng)
+    if isinstance(b, np.ndarray) and b.ndim > 1:
+        b = b[0][:, np.newaxis]
     t = τ + ((b - k) / d)
     x = np.zeros((size[0], 2))
     winner = np.nanargmin(t, axis=1)
@@ -424,6 +437,8 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, v4, rng, size=None):
     v3a = np.where(n == 1, v3, v4)
     k = rng.uniform(0, A, size=(size[0], 4))
     d = drift_rates([v1, v2a, v3a, v3a], s, size[0], rng)
+    if isinstance(b, np.ndarray) and b.ndim > 1:
+        b = b[0][:, np.newaxis]
     t = τ + ((b - k) / d)
     x = np.zeros((size[0], 2))
     winner = np.nanargmin(t, axis=1)
@@ -734,7 +749,7 @@ def parameter_table(trace, param_map):
 
     # create table
     s_hdi = [f'[{l:.4f}, {u:.4f}]' for l, u in zip(lower, upper)]
-    table = pd.DataFrame({'Mean': m.to_numpy(), '94\% HDI': s_hdi}, index=var_labels)
+    table = pd.DataFrame({'Mean': m.to_numpy(), '94% HDI': s_hdi}, index=var_labels)
     table.index.name = 'Parameter'
     table = table.reset_index()
     return table

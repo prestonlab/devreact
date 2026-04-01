@@ -3,7 +3,7 @@
 import os
 import contextlib
 import warnings
-from pkg_resources import resource_filename
+from importlib import resources
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ from devreact import model
 def set_style(style_path=None):
     """Set default plot style."""
     if style_path is None:
-        style_path = resource_filename('devreact', 'data/figures.mplstyle')
+        style_path = resources.files('devreact').joinpath('data/figures.mplstyle')
     plt.style.use(style_path)
 
 
@@ -122,7 +122,7 @@ def plot_predictive(
     else:
         raise ValueError(f'Invalid group: {group}')
     samples = pps.stack({'sample': ['chain', 'draw']})
-    m = samples.dims['sample']
+    m = samples.sizes['sample']
 
     factors = {'row': row, 'col': col}
     names = {}
@@ -130,11 +130,11 @@ def plot_predictive(
     labels = {}
     for position, factor in factors.items():
         if factor == 'trial_type':
-            n = np.array(['direct', 'inference'])
+            n = np.array(['memory', 'inference'])
             v = n[predictive.constant_data.trial_type_index.values]
         elif factor == 'accuracy':
             n = np.array(['correct', 'incorrect'])
-            v = n[1 - predictive.constant_data.x.values[:, 0].astype(int)]
+            v = n[1 - predictive.observed_data.response.values[:, 0].astype(int)]
         elif factor == 'age':
             n = np.array(['Age 7-8', 'Age 9-10', 'Age 11-12', 'Age 18-35'])
             sind = predictive.constant_data.subject_index.values
@@ -245,6 +245,7 @@ def plot_predictive_acc(predictive, group='posterior'):
     )
     accuracy = pd.concat([o, p], axis=1, keys=['Observed', 'Predictive']).reset_index()
     accuracy['trial_type'] = accuracy['trial_type'].str.capitalize()
+    accuracy['trial_type'] = accuracy['trial_type'].map({'Direct': 'Memory', 'Indirect': 'Inference'})
     accuracy['Age'] = np.repeat(
         predictive.constant_data.age.values, accuracy['trial_type'].nunique()
     )
@@ -272,6 +273,7 @@ def plot_predictive_acc(predictive, group='posterior'):
 def plot_predictive_rt(predictive, group='posterior', max_time=None):
     """Plot predictive response time by subject."""
     rt = model.response_time_stats(predictive, group=group, max_time=max_time)
+    rt['trial_type'] = rt['trial_type'].map({'Direct': 'Memory', 'Indirect': 'Inference'})
     rt = rt.rename(columns={'age': 'Age'})
     g = sns.relplot(
         data=rt,
