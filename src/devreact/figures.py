@@ -3,7 +3,7 @@
 import os
 import contextlib
 import warnings
-from pkg_resources import resource_filename
+from importlib import resources
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,7 +15,7 @@ from devreact import model
 def set_style(style_path=None):
     """Set default plot style."""
     if style_path is None:
-        style_path = resource_filename('devreact', 'data/figures.mplstyle')
+        style_path = resources.files('devreact').joinpath('data/figures.mplstyle')
     plt.style.use(style_path)
 
 
