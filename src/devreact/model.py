@@ -339,7 +339,11 @@ def drift_rates(v, s, nt, rng):
     while not valid:
         # generate random accumulator drift rates
         c = np.zeros((nt, nv))
+        if isinstance(s, np.ndarray) and s.ndim > 1:
+            s = s[0]
         for i in range(nv):
+            if isinstance(v[i], np.ndarray) and v[i].ndim > 1:
+                v[i] = v[i][0]
             c[:, i] = rng.normal(loc=v[i], scale=s, size=nt)
         valid_c = c[np.any(c > 0, axis=1), :]
 
@@ -739,7 +743,7 @@ def parameter_table(trace, param_map):
 
     # create table
     s_hdi = [f'[{l:.4f}, {u:.4f}]' for l, u in zip(lower, upper)]
-    table = pd.DataFrame({'Mean': m.to_numpy(), '94\% HDI': s_hdi}, index=var_labels)
+    table = pd.DataFrame({'Mean': m.to_numpy(), '94% HDI': s_hdi}, index=var_labels)
     table.index.name = 'Parameter'
     table = table.reset_index()
     return table
