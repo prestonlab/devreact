@@ -1,0 +1,20 @@
+{
+    "language": "eng",
+    "license": "GPL-3.0+",
+    "title": "DevReact: Modeling of developmental changes in memory-based decision making",
+    "upload_type": "software",
+    "creators": [
+        {
+            "name": "Neal W Morton",
+            "orcid": "0000-0002-2631-2710",
+            "affiliation": "University of Wisconsin–Milwaukee"
+        }
+    ],
+    "keywords": [
+        "psychology",
+        "neuroscience",
+        "Python",
+        "fMRI"
+    ],
+    "access_right": "open"
+}
