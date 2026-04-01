@@ -385,6 +385,8 @@ def random_single(n, s, τ, A, b, v1, v2, rng, size=None):
     # sample start point and drift on each trial
     k = rng.uniform(0, A, size=(size[0], 3))
     d = drift_rates([v1, v2, v2], s, size[0], rng)
+    if isinstance(b, np.ndarray) and b.ndim > 1:
+        b = b[0][:, np.newaxis]
     t = τ + ((b - k) / d)
 
     # score responses (0 is correct, 1 or 2 is incorrect)
@@ -411,6 +413,8 @@ def random_separate(n, s, τ, A, b, v1, v2, v3, v4, rng, size=None):
     v2a = np.where(n == 1, v3, v4)
     k = rng.uniform(0, A, size=(size[0], 3))
     d = drift_rates([v1a, v2a, v2a], s, size[0], rng)
+    if isinstance(b, np.ndarray) and b.ndim > 1:
+        b = b[0][:, np.newaxis]
     t = τ + ((b - k) / d)
     x = np.zeros((size[0], 2))
     winner = np.nanargmin(t, axis=1)
@@ -433,6 +437,8 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, v4, rng, size=None):
     v3a = np.where(n == 1, v3, v4)
     k = rng.uniform(0, A, size=(size[0], 4))
     d = drift_rates([v1, v2a, v3a, v3a], s, size[0], rng)
+    if isinstance(b, np.ndarray) and b.ndim > 1:
+        b = b[0][:, np.newaxis]
     t = τ + ((b - k) / d)
     x = np.zeros((size[0], 2))
     winner = np.nanargmin(t, axis=1)
