@@ -18,6 +18,7 @@ urls = {project = "https://github.com/prestonlab/devreact"}
 dependencies = [
     "ipywidgets>=8.1.8",
     "jupyterlab>=4.5.6",
+    "pandas-stubs~=3.0.2",
     "pymc>=5.28.3",
     "scipy-stubs~=1.17.1",
     "seaborn>=0.13.2",
