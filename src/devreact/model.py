@@ -118,7 +118,7 @@ def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3, v4):
 
     # calculate probability of this response and rt
     p = pt.switch(pt.eq(i, 1), c1 + c2, 2 * c3)
-    return p
+    return p, (c1, c2, 2 * c3)
 
 
 def function_pdf_single():
@@ -184,8 +184,8 @@ def function_pdf_dual():
         pt.dscalar('v4'),
     ]
 
-    p = pdf_dual(response, n, *params)
-    f = pytensor.function([response, n, *params], p)
+    p, c = pdf_dual(response, n, *params)
+    f = pytensor.function([response, n, *params], [p, *c])
     return f
 
 
@@ -205,7 +205,7 @@ def logp_separate(response_data, n, *params):
 
 def logp_dual(response_data, n, *params):
     """Calculate log probability using pytensor."""
-    p = pdf_dual(response_data, n, *params)
+    p, _ = pdf_dual(response_data, n, *params)
     ll = pm.math.sum(pm.math.log(pm.math.clip(p, 10e-10, np.inf)))
     return ll
 
