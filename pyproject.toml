@@ -19,6 +19,7 @@ dependencies = [
     "ipywidgets>=8.1.8",
     "jupyterlab>=4.5.6",
     "pandas-stubs~=3.0.2",
+    "pingouin>=0.6.1",
     "polars>=1.44.1",
     "pyarrow>=25.0.1",
     "pymc>=5.28.3",
