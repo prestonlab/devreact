@@ -96,8 +96,8 @@ def pdf_separate(response_data, n, s, τ, A, b, v1, v2, v3, v4):
 
 def pdf_dual(response_data, n, s, τ, A, b, v1, v2, r, v3, v4):
     """PDF for a dual-process model."""
-    i = response_data[:, 0]
-    t = response_data[:, 1] - τ
+    i = response_data[..., 0]
+    t = response_data[..., 1] - τ
 
     # PDF for each accumulator
     v2a = v2 * r ** (n - 1)
