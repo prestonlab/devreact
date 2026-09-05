@@ -435,6 +435,8 @@ def random_dual(n, s, τ, A, b, v1, v2, r, v3, v4, rng, size=None):
 
     v2a = v2 * r ** (n - 1)
     v3a = np.where(n == 1, v3, v4)
+    if isinstance(A, np.ndarray) and A.ndim > 1:
+        A = A[0][:, np.newaxis]
     k = rng.uniform(0, A, size=(size[0], 4))
     d = drift_rates([v1, v2a, v3a, v3a], s, size[0], rng)
     if isinstance(b, np.ndarray) and b.ndim > 1:
